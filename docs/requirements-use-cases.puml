@@ -1,0 +1,29 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EEF4FF
+  BorderColor #38598B
+  ArrowColor #505A66
+}
+
+actor "Application Developer\nor Data Analyst" as User
+actor "Local File System\n<<supporting>>" as FileSystem
+actor "Rerun Maintainer\n<<offstage>>" as Maintainer
+
+rectangle "Rerun" {
+  usecase "Log Time Aware Data" as LogData
+  usecase "Save Recording File" as SaveRecording
+  usecase "Explore Recording Over Time" as ExploreRecording
+}
+
+User -- LogData
+User -- SaveRecording
+User -- ExploreRecording
+FileSystem -- SaveRecording
+FileSystem -- ExploreRecording
+Maintainer .. LogData : oversees consistency
+@enduml
