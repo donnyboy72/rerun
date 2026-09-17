@@ -5,11 +5,18 @@ The descriptions below are grounded in the repository's Python SDK, Viewer imple
 
 ## Requirements
 
+F1 and F2 are functional requirements because they describe capabilities the system provides.
+The usability, reliability, performance, and supportability requirements are non-functional requirements because they describe qualities and constraints on those capabilities, while the plus requirements record additional integration and licensing constraints.
+
 ### Functional
 
 **F1 — Log structured observations.**
 Rerun shall let an application log structured component data under an entity path and associate temporal data with automatically generated or explicitly selected timelines.
 Evidence: the Python SDK's [`log`](../rerun_py/rerun_sdk/rerun/_log.py) function accepts an entity path and component batches, handles static data, and timestamps non-static data; the [data-in guide](content/getting-started/data-in.md) demonstrates archetype logging and custom timelines.
+
+**F2 — Open supported data sources.**
+Rerun shall let a user open local recordings, blueprints, supported media files, HTTP or HTTPS recording URLs, and gRPC server URLs for inspection in the Viewer.
+Evidence: the generated [CLI reference](content/reference/cli.md) lists the supported input paths and URLs, while [`command_handling.rs`](../crates/viewer/re_viewer/src/app/command_handling.rs) sends files selected through the Viewer's **Open** command to the data-loading system and provides a separate **Open URL** command.
 
 ### Usability
 
@@ -17,11 +24,19 @@ Evidence: the Python SDK's [`log`](../rerun_py/rerun_sdk/rerun/_log.py) function
 The Viewer shall expose meaningful alternative text for action controls and allow list items to receive focus for keyboard navigation.
 Evidence: [`item_buttons.rs`](../crates/viewer/re_ui/src/list_item/item_buttons.rs) uses `alt_text` for screen readers and tooltips, while [`list_item.rs`](../crates/viewer/re_ui/src/list_item/list_item.rs) requests focus on a clicked item so keyboard navigation can continue.
 
+**U2 — Make actions and help discoverable.**
+The Viewer shall provide searchable access to commands and contextual instructions so users do not have to memorize every menu location or interaction.
+Evidence: the [Viewer overview](content/reference/viewer/overview.md) documents a text-searchable command palette available through `Cmd/Ctrl+P`, hover tooltips on most UI items, and view-specific help icons; [`command_palette.rs`](../crates/viewer/re_ui/src/command_palette.rs) implements fuzzy command matching and keyboard selection.
+
 ### Reliability
 
 **R1 — Produce complete recording files by default.**
 When a recording stream is closed normally, Rerun shall write a complete RRD footer by default so the recording remains suitable for random access and tools such as `LazyStore`.
 Evidence: [`sinks.py`](../rerun_py/rerun_sdk/rerun/sinks.py) defaults `write_footer` to `True` and documents the consequences of omitting it; [`test_file_sink.py`](../rerun_py/tests/unit/test_file_sink.py) verifies that the default save path writes a valid stream footer.
+
+**R2 — Recover interrupted MCAP recordings when requested.**
+When an MCAP recording retains its data section but is missing its summary because writing was interrupted, Rerun shall offer an explicit recovery mode that reconstructs the same messages and time bounds as the intact recording.
+Evidence: [`test_mcap_reader.py`](../rerun_py/tests/integration/test_mcap_reader.py) creates a recording truncated before its summary, verifies that `recover=True` returns the same temporal rows and time bounds as the healthy file, and verifies that normal mode reports a clear error suggesting recovery.
 
 ### Performance
 
@@ -29,17 +44,29 @@ Evidence: [`sinks.py`](../rerun_py/rerun_sdk/rerun/sinks.py) defaults `write_foo
 The SDK shall micro-batch logged data in a background thread and flush on configurable time or size thresholds to reduce metadata, bandwidth, and CPU overhead.
 Evidence: the [micro-batching documentation](content/reference/sdk/micro-batching.md) specifies time, byte, and row thresholds, including the 200 ms general default and 8 ms network-sink default.
 
+**P2 — Bound Viewer and server memory use.**
+Rerun shall allow memory limits to be configured for both the Viewer and its gRPC server and shall discard the oldest buffered data when a configured limit is reached.
+Evidence: the [CLI reference](content/reference/cli.md) documents `--memory-limit` for the Viewer and `--server-memory-limit` for the gRPC server, including percentage or absolute-size values and the oldest-data eviction behavior.
+
 ### Supportability
 
 **S1 — Generate consistent APIs from shared type definitions.**
 Maintainers shall be able to regenerate language-specific type code and documentation from the shared `re_type_definitions` source instead of maintaining each generated API independently.
 Evidence: the [`re_types_builder` README](../crates/build/re_types_builder/README.md) states that the builder translates shared type definitions into code and translates documentation links for each target language through `pixi run codegen`.
 
+**S2 — Extend ingestion without changing the Viewer.**
+Rerun shall discover external importer executables through a documented naming convention so maintainers and users can add support for new file formats independently of the core Viewer.
+Evidence: the [importer overview](content/concepts/logging-and-ingestion/importers/overview.md) documents executables on `PATH` whose names begin with `rerun-importer-`, and [`importer_external.rs`](../crates/store/re_importer/src/importer_external.rs) discovers those executables and expects them to emit RRD data through standard output.
+
 ### Plus Constraint
 
 **C1 — Preserve the dual-license packaging constraint.**
 Distributed Rerun crates shall declare the project license as `MIT OR Apache-2.0` and include both license files in packaged crates.
 Evidence: the workspace package configuration in [`Cargo.toml`](../Cargo.toml) declares `MIT OR Apache-2.0` and includes `LICENSE-MIT` and `LICENSE-APACHE`.
+
+**C2 — Interoperate through defined external interfaces.**
+Rerun shall accept live recording streams over its supported `rerun://`, `rerun+http://`, and `rerun+https://` gRPC proxy URL schemes in addition to local file input.
+Evidence: [`sinks.py`](../rerun_py/rerun_sdk/rerun/sinks.py) validates these URL schemes for `connect_grpc`, and the [CLI reference](content/reference/cli.md) identifies a gRPC URL as a supported Viewer input.
 
 ## Actors
 
@@ -198,4 +225,4 @@ The editable diagram source is [`requirements-use-cases.puml`](requirements-use-
 | Date | Tool | How AI Was Used | Verification Performed |
 | --- | --- | --- | --- |
 | 2026-09-16 | OpenAI Codex | Extracted the assignment requirements and proposed FURPS+ requirements, actors, brief use cases, fully dressed use cases, and a PlantUML diagram for Rerun. | Checked every functional step and requirement against the repository files linked throughout this page. Confirmed `main` matched `origin/main` after fetching. Verified the save/footer behavior against `sinks.py` and `test_file_sink.py`; logging behavior against `_log.py` and `recording_stream.py`; file-open behavior against `command_handling.rs` and `open_url.rs`; timeline behavior against the Viewer documentation; accessibility behavior against `item_buttons.rs` and `list_item.rs`; micro-batching against its reference documentation; code generation against `re_types_builder/README.md`; and licensing against `Cargo.toml`. |
-
+| 2026-09-17 | OpenAI Codex | Added a second requirement to every FURPS+ category and clarified the distinction between functional requirements, non-functional requirements, and plus constraints. | Verified file and URL loading against `command_handling.rs` and the CLI reference; command discovery against the Viewer overview and `command_palette.rs`; interrupted MCAP recovery against `test_mcap_reader.py`; memory limits against the CLI reference; external importer extensibility against the importer overview and `importer_external.rs`; and gRPC URL schemes against `sinks.py`. |
