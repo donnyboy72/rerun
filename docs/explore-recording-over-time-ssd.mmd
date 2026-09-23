@@ -1,0 +1,13 @@
+sequenceDiagram
+    actor Actor as Application Developer or Data Analyst
+    participant S as :RerunSystem
+    Actor->>S: requestOpenRecording()
+    S-->>Actor: source selection requested
+    Actor->>S: openRecording(sourceLocation)
+    S-->>Actor: recording summary and compatible views
+    loop while exploring time
+        Actor->>S: moveTimeCursor(timelineName, position)
+        S-->>Actor: views at selected time
+    end
+    Actor->>S: selectEntity(entityPath)
+    S-->>Actor: applicable properties and data

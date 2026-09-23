@@ -1,0 +1,11 @@
+sequenceDiagram
+    actor Actor as Application Developer or Data Analyst
+    participant S as :RerunSystem
+    Actor->>S: initializeRecording(applicationId)
+    S-->>Actor: recordingId
+    Actor->>S: setTimelinePosition(timelineName, position)
+    S-->>Actor: timeline context accepted
+    loop each observation
+        Actor->>S: logObservation(entityPath, componentBatches, isStatic)
+        S-->>Actor: observationId
+    end

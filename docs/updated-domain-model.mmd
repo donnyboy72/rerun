@@ -1,67 +1,50 @@
-# Updated Domain Model
-
-This conceptual model describes the domain of recording, saving, and exploring time-based multimodal observations.
-It represents concepts named by the three fully dressed use cases rather than Rerun's source-code structure.
-
-```mermaid
 classDiagram
     class Analyst {
         role
     }
-
     class Recording {
         recordingId
         applicationId
         creationTime
         status
     }
-
     class DataSource {
         location
         sourceKind
         readable
     }
-
     class RecordingFile {
         path
         writeFooter
         status
         footerComplete
     }
-
     class Entity {
         entityPath
     }
-
     class Observation {
         observationId
         static
     }
-
     class Timeline {
         name
         timeBasis
     }
-
     class TimePoint {
         position
     }
-
     class ComponentBatch {
         componentType
         value
     }
-
     class ViewingSession {
         currentPosition
         status
     }
-
     class View {
         name
         presentationKind
     }
-
     class Selection {
         selectionKind
     }
@@ -82,13 +65,3 @@ classDiagram
     View "0..*" -- "1..*" Entity : displays
     ViewingSession "1" *-- "0..1" Selection : has
     Selection "0..*" -- "1" Entity : identifies
-```
-
-An observation is a recorded fact about one entity and contains one or more typed component batches.
-A non-static observation is associated with time points on timelines, while a static observation applies across every position.
-A recording groups observations and may be persisted as a recording file or loaded from another data source.
-An analyst explores a recording in a viewing session whose current timeline, cursor position, views, and optional selection capture the state described by the exploration use case.
-
-Compared with the initial model, this version replaces the broad `ObservedSubject` concept with Rerun's use-case term `Entity`, separates typed component data into `ComponentBatch`, and represents timeline positions as `TimePoint` instances.
-It also adds `RecordingFile` for the save use case and `ViewingSession` plus `Selection` for the exploration use case.
-These changes let the SSD operations and contracts refer only to classes, attributes, and associations that appear in the model.
