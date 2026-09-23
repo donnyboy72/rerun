@@ -1,11 +1,11 @@
 sequenceDiagram
-    actor Actor as DeveloperOrAnalyst
+    actor User as DeveloperOrAnalyst
     participant S as RerunSystem
-    Actor->>S: saveRecording(path, writeFooter)
-    S-->>Actor: save destination accepted
+    User->>S: saveRecording(path, writeFooter)
+    S-->>User: save destination accepted
     loop one or more observations
-        Actor->>S: logObservation(entityPath, componentBatches, isStatic)
-        S-->>Actor: observationId
+        User->>S: logObservation(entityPath, componentBatches, isStatic)
+        S-->>User: observationId
     end
-    Actor->>S: disconnectRecording()
-    S-->>Actor: saved file path
+    User->>S: disconnectRecording()
+    S-->>User: saved file path

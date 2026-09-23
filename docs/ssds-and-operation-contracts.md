@@ -127,15 +127,15 @@ The editable diagram source is [`updated-domain-model.mmd`](updated-domain-model
 
 ```mermaid
 sequenceDiagram
-    actor Actor as DeveloperOrAnalyst
+    actor User as DeveloperOrAnalyst
     participant S as RerunSystem
-    Actor->>S: initializeRecording(applicationId)
-    S-->>Actor: recordingId
-    Actor->>S: setTimelinePosition(timelineName, position)
-    S-->>Actor: timeline context accepted
+    User->>S: initializeRecording(applicationId)
+    S-->>User: recordingId
+    User->>S: setTimelinePosition(timelineName, position)
+    S-->>User: timeline context accepted
     loop each observation
-        Actor->>S: logObservation(entityPath, componentBatches, isStatic)
-        S-->>Actor: observationId
+        User->>S: logObservation(entityPath, componentBatches, isStatic)
+        S-->>User: observationId
     end
 ```
 
@@ -170,16 +170,16 @@ The editable diagram source is [`log-time-aware-data-ssd.mmd`](log-time-aware-da
 
 ```mermaid
 sequenceDiagram
-    actor Actor as DeveloperOrAnalyst
+    actor User as DeveloperOrAnalyst
     participant S as RerunSystem
-    Actor->>S: saveRecording(path, writeFooter)
-    S-->>Actor: save destination accepted
+    User->>S: saveRecording(path, writeFooter)
+    S-->>User: save destination accepted
     loop one or more observations
-        Actor->>S: logObservation(entityPath, componentBatches, isStatic)
-        S-->>Actor: observationId
+        User->>S: logObservation(entityPath, componentBatches, isStatic)
+        S-->>User: observationId
     end
-    Actor->>S: disconnectRecording()
-    S-->>Actor: saved file path
+    User->>S: disconnectRecording()
+    S-->>User: saved file path
 ```
 
 The editable diagram source is [`save-recording-file-ssd.mmd`](save-recording-file-ssd.mmd).
@@ -210,18 +210,18 @@ The editable diagram source is [`save-recording-file-ssd.mmd`](save-recording-fi
 
 ```mermaid
 sequenceDiagram
-    actor Actor as DeveloperOrAnalyst
+    actor User as DeveloperOrAnalyst
     participant S as RerunSystem
-    Actor->>S: requestOpenRecording()
-    S-->>Actor: source selection requested
-    Actor->>S: openRecording(sourceLocation)
-    S-->>Actor: recording summary and compatible views
+    User->>S: requestOpenRecording()
+    S-->>User: source selection requested
+    User->>S: openRecording(sourceLocation)
+    S-->>User: recording summary and compatible views
     loop while exploring time
-        Actor->>S: moveTimeCursor(timelineName, position)
-        S-->>Actor: views at selected time
+        User->>S: moveTimeCursor(timelineName, position)
+        S-->>User: views at selected time
     end
-    Actor->>S: selectEntity(entityPath)
-    S-->>Actor: applicable properties and data
+    User->>S: selectEntity(entityPath)
+    S-->>User: applicable properties and data
 ```
 
 The editable diagram source is [`explore-recording-over-time-ssd.mmd`](explore-recording-over-time-ssd.mmd).
