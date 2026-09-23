@@ -127,7 +127,7 @@ The editable diagram source is [`updated-domain-model.mmd`](updated-domain-model
 
 ```mermaid
 sequenceDiagram
-    actor Actor as Application Developer or Data Analyst
+    actor Actor as DeveloperOrAnalyst
     participant S as RerunSystem
     Actor->>S: initializeRecording(applicationId)
     S-->>Actor: recordingId
@@ -170,7 +170,7 @@ The editable diagram source is [`log-time-aware-data-ssd.mmd`](log-time-aware-da
 
 ```mermaid
 sequenceDiagram
-    actor Actor as Application Developer or Data Analyst
+    actor Actor as DeveloperOrAnalyst
     participant S as RerunSystem
     Actor->>S: saveRecording(path, writeFooter)
     S-->>Actor: save destination accepted
@@ -210,7 +210,7 @@ The editable diagram source is [`save-recording-file-ssd.mmd`](save-recording-fi
 
 ```mermaid
 sequenceDiagram
-    actor Actor as Application Developer or Data Analyst
+    actor Actor as DeveloperOrAnalyst
     participant S as RerunSystem
     Actor->>S: requestOpenRecording()
     S-->>Actor: source selection requested
