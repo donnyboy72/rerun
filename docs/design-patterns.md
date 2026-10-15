@@ -11,6 +11,16 @@ Generic type bounds are abbreviated in the diagrams and retained in source excer
 ### Pattern 1 observer
 
 **Design pattern used: Observer (behavioral).**
+
+**GoF explanation:** Observer creates a one-to-many relationship: when one object, the subject, changes, its registered observers are notified so they can respond.
+The subject talks to a shared Observer interface instead of depending on every concrete observer class.
+The standard roles are Subject, Observer, ConcreteSubject, and ConcreteObserver.
+It is behavioral because it organizes communication between objects.
+
+**Everyday example:** people subscribe to delivery updates; the service notifies them when the status changes rather than making each person repeatedly check.
+Each subscriber decides how to react.
+
+**How Rerun applies it:**
 Observer lets an object announce changes to other objects that have registered an interest in them.
 In Rerun, the object announcing changes is `ChunkStore`, and one object listening for those changes is `SpatialTopologyStoreSubscriber`.
 Spatial topology means the relationships between entities' coordinate spaces, such as how a camera projection connects a 3D space to a 2D image.
@@ -98,6 +108,16 @@ Subscribers are global and notification order is unspecified; registration befor
 ### Pattern 2 builder
 
 **Design pattern used: Builder (creational).**
+
+**GoF explanation:** Builder separates the construction of a complex object from its representation, allowing a construction process to produce different representations.
+A Builder defines construction steps, a ConcreteBuilder implements them, and a Director or caller controls their sequence to produce a Product.
+It is creational because it organizes object creation.
+The classic GoF structure often has several concrete builders; Rerun uses a fluent Rust variation with configuration steps and terminal methods that create the finished stream.
+
+**Everyday example:** choosing bread, filling, and extras before receiving a completed sandwich illustrates step-by-step construction.
+The completed sandwich is the product; GoF additionally emphasizes separating the construction process from the resulting representation.
+
+**How Rerun applies it:**
 Builder separates choosing an object's settings from constructing the finished object.
 In Rerun, `RecordingStreamBuilder` collects settings, then constructs a `RecordingStream`, the SDK object used to log recording data.
 
@@ -170,6 +190,16 @@ Returning `Self` from setters is only part of the evidence: the separate configu
 ### Pattern 3 composite
 
 **Design pattern used: Composite (structural).**
+
+**GoF explanation:** Composite arranges objects into part-whole trees and allows clients to treat individual objects and groups uniformly.
+A Component defines common operations, a Leaf represents an individual object, and a Composite contains child components while implementing the same operations.
+A group delegates work to its children; those children can themselves be groups where nesting is supported.
+It is structural because it organizes how objects are combined.
+
+**Everyday example:** a drawing contains individual shapes and groups of shapes.
+The same move operation can move one shape or a group, with the group moving its children.
+
+**How Rerun applies it:**
 Composite lets a group of objects be used through the same interface as one individual object.
 In Rerun, a sink is a destination for log messages.
 `MultiSink` groups several destinations together and behaves like a single `LogSink` to the recording pipeline.
@@ -261,6 +291,16 @@ The public tuple conversion API restricts which sinks can be combined through `M
 ## Part 2 a missing strategy for table cell configuration
 
 **Proposed design pattern: Strategy (behavioral).**
+
+**GoF explanation:** Strategy defines a family of algorithms, encapsulates each one, and makes them interchangeable through a common interface.
+The Context uses a selected Strategy, while ConcreteStrategies supply the different implementations.
+This allows behavior to vary without placing each algorithm inside the context.
+It is behavioral because it organizes how a task is performed.
+
+**Everyday example:** a route planner delegates route calculation to a walking or driving strategy through the same operation.
+The planner does not need to implement both routing algorithms itself.
+
+**How the proposal applies it:**
 The proposed change is in the Python SDK's table blueprint code, specifically `Column`, `TableBlueprint`, and the cell types in `_table_cells.py`.
 A table blueprint tells the Viewer how a table should look.
 A column's `cell` option selects a presentation such as a link, thumbnail, flag, or embedded recording preview.
@@ -873,3 +913,4 @@ The presentation still needs a personal rehearsal to confirm delivery under five
 | 2026-10-14 | OpenAI Codex | Updated the assignment AI Use Log and prepared the remaining comparison and presentation documentation for a separate documentation commit and user-authorized push to the fork. | Verified the push URL is `https://github.com/donnyboy72/rerun.git` and retained the two separate implementation commits. Prior validation: 16 Python tests, 35 Rust tests, SDK build, Clippy, formatting, UI snapshot review, and repository lint/codegen checks passed. Documentation lint passed and both local documentation copies match. Publication is authorized only to the fork branch; no upstream push or PR is included. |
 | 2026-10-14 | OpenAI Codex | Added two Mermaid before-and-after responsibility diagrams explaining the Part 2–3 Strategy and Part 4 Information Expert refactoring, with plain-language labels beside real type names. | Checked arrows against the implementation: cells own extra configuration, TableBlueprint retains shared-view coordination, and naming delegates to the two existing datatype models. Diagram source is also saved in the repository documentation. |
 | 2026-10-14 | OpenAI Codex | Added a system-context diagram locating the cell Strategy in Python blueprint configuration and datatype naming in the Rust Viewer and separate documentation tool. | Checked the diagram against the changed source files and existing responsibilities; distinguished configuration from drawing, runtime from code generation, and the two datatype naming models. |
+| 2026-10-15 | OpenAI Codex | Expanded Observer, Builder, Composite, and Strategy with GoF intent, standard roles, categories, and everyday examples before the project-specific explanations. | Checked that Observer describes one-to-many notification, Builder distinguishes construction from representation, Composite describes part-whole structure, and Strategy describes interchangeable behavior. Distinguished the fluent Rust Builder variation from the classic GoF structure. |
