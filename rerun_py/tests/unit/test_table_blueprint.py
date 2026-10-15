@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 import rerun as rr
@@ -88,6 +88,34 @@ def test_table_blueprint_logs_shared_preview_once() -> None:
         blueprint._log_to_stream(stream)
 
     log_view.assert_called_once_with(stream)
+
+
+def test_table_blueprint_delegates_cell_configuration() -> None:
+    view = rrb.Spatial2DView(origin="/camera")
+    log_cell = Mock()
+
+    class ViewDependentCell(rrb.table.LinkCell):
+        def _blueprint_views(self) -> tuple[rrb.View, ...]:
+            return (view,)
+
+        def _log_to_stream(self, stream: rr.RecordingStream, path: str) -> None:
+            log_cell(stream, path)
+
+    column = rrb.table.Column("recording", cell=ViewDependentCell())
+    blueprint = rrb.TableBlueprint(
+        table_layout=rrb.table.TableLayout(columns=[column]),
+        card_layout=rrb.table.CardLayout(fields=[column]),
+    )
+    stream = Mock(spec=rr.RecordingStream)
+
+    with patch.object(view, "_log_to_stream") as log_view:
+        blueprint._log_to_stream(stream)
+
+    log_view.assert_called_once_with(stream)
+    assert log_cell.call_args_list == [
+        call(stream, "table/layouts/table/columns/recording"),
+        call(stream, "table/layouts/cards/fields/recording"),
+    ]
 
 
 @pytest.mark.parametrize("timeline", [None, "real_time"])

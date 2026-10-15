@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from .api import View
+from .archetypes import TableColumnPreview
 from .components import TableCellKind
+
+if TYPE_CHECKING:
+    from ..recording_stream import RecordingStream
 
 __all__ = [
     "EntryKindCell",
@@ -26,6 +30,13 @@ class _Cell:
         if cls is _Cell:
             raise TypeError("Table cell renderers must use a concrete cell type")
         return super().__new__(cls)
+
+    def _blueprint_views(self) -> tuple[View, ...]:
+        """Views that must be logged before this cell's configuration."""
+        return ()
+
+    def _log_to_stream(self, stream: RecordingStream, path: str) -> None:
+        """Log any cell-specific configuration beyond the common column properties."""
 
 
 @dataclass(frozen=True)
@@ -77,6 +88,12 @@ class PreviewCell(_Cell):
         if not all(isinstance(view, View) for view in views):
             raise TypeError("PreviewCell only accepts Rerun views")
         object.__setattr__(self, "views", tuple(views))
+
+    def _blueprint_views(self) -> tuple[View, ...]:
+        return self.views
+
+    def _log_to_stream(self, stream: RecordingStream, path: str) -> None:
+        stream.log(path, TableColumnPreview(views=[view.blueprint_path() for view in self.views]))
 
 
 # TODO(RR-4810): Add TimestampCell after TableCellKind models it.

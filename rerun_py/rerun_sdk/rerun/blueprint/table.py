@@ -26,7 +26,6 @@ from .archetypes import (
     PreviewsConfig as PreviewsConfig,
     TableBlueprint as TableBlueprintArchetype,
     TableColumn as TableColumnArchetype,
-    TableColumnPreview,
     TableLayout as TableLayoutArchetype,
 )
 
@@ -129,8 +128,8 @@ class Column:
         if components:
             stream.log(path, components)
 
-        if isinstance(self.cell, PreviewCell):
-            stream.log(path, TableColumnPreview(views=[view.blueprint_path() for view in self.cell.views]))
+        if self.cell is not None:
+            self.cell._log_to_stream(stream, path)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -277,8 +276,8 @@ class TableBlueprint:
             view.blueprint_path(): view
             for columns in layouts
             for column in columns
-            if isinstance(column.cell, PreviewCell)
-            for view in column.cell.views
+            if column.cell is not None
+            for view in column.cell._blueprint_views()
         }
 
         for view in views.values():
