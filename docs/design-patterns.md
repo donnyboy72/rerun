@@ -465,13 +465,268 @@ Final fast lint checks passed, including generated-code consistency checking, co
 
 Local commit message: `A8-GRASP: Refactor DataTypeUi to apply Information Expert`.
 
+## Part 5 GoF and GRASP
+
+GRASP principles guide where responsibilities should belong, while GoF patterns provide named, reusable structures for carrying out those decisions.
+In Rerun's table blueprint code, Information Expert points to `PreviewCell` as the owner of preview-specific configuration because it already holds the embedded views; Low Coupling suggests that `Column` and `TableBlueprint` should use a common cell interface instead of checking for a concrete preview type.
+The Strategy pattern implements those decisions through `_Cell._log_to_stream()` and `_Cell._blueprint_views()`, with `PreviewCell` supplying its behavior and ordinary cells inheriting empty defaults.
+`Column` delegates cell-specific logging, while `TableBlueprint` retains cross-layout view deduplication because it has information about all layouts.
+This example shows how GRASP identifies the appropriate owners of the work and GoF supplies a concrete collaboration between those owners.
+
+## Part 6 class presentation and question preparation
+
+### Presentation setup
+
+This script is written for classmates who have not used Rerun and do not know Rust or machine learning.
+The spoken text is about four minutes at a comfortable pace; rehearse it once and keep the screen changes brief to stay under five minutes.
+The question preparation below is separate from the spoken script.
+
+Use the Markdown page and Git diffs while presenting.
+The wiki draft is local; publishing it is separate from pushing the repository branch.
+Keep the Part 1 Composite diagram and the two implementation diffs ready in separate tabs or terminal views.
+No slides are needed.
+
+### Spoken script
+
+**Opening and project context, about 25 seconds**
+
+“Rerun lets people inspect recorded information, such as images and measurements, and see how it changes over time.
+Think of it as a playback tool for information produced by another program.
+For this assignment, I examined how its objects divide up their work.
+You do not need to know machine learning or Rust to understand the changes.”
+
+**Show the Part 1 Composite diagram, about 35 seconds**
+
+“One existing pattern is Composite.
+A sink is a destination for recorded information, such as a file or a live viewer.
+`MultiSink` groups several destinations together.
+The program sends one message to the group, and the group sends a copy to each destination.
+It is like a print service handling several printers for you.
+Composite lets the recording code treat the group like one destination, without managing each destination itself.”
+
+**Show the Part 3 diff in `table.py`, about 70 seconds**
+
+“My first change concerns table cells.
+A cell can show a link, a flag, or a preview containing a small view of a recording.
+A blueprint is the saved set of instructions describing how the table should look.
+Previously, two callers checked whether a cell was specifically a preview.
+One wrote its preview settings, and the other extracted the views it needed.
+That worked, but knowledge about previews was spread across both callers.
+
+I changed them to ask the selected cell to handle its special settings and identify its required views.
+The preview cell now owns the preview-specific work.
+Other cells use default behavior when they have nothing extra to provide.
+This is Strategy: the caller uses common operations, and the selected object supplies the behavior.
+The table still makes sure shared views are written only once.
+The visible result should stay the same; preview-specific changes are now easier to make in one place.”
+
+**Show the Part 4 diff and corrected label, about 50 seconds**
+
+“The second change applies Information Expert: give work to the object that already has the relevant information.
+The screen code and documentation generator each maintained a list of datatype names, even though datatype objects already knew their names.
+I removed those extra lists and asked the datatype objects to describe themselves.
+
+There is a small visible correction.
+The screen previously labeled both `Binary` and `LargeBinary` as `Binary`.
+It now shows the specific name, matching the table formatter.
+This changes the label, not the stored data.
+It addresses duplicated primitive naming in issue 11071, but does not complete every formatting request in that issue.”
+
+**Explain validation and finish, about 60 seconds**
+
+“The first change passed 16 table-blueprint tests.
+Some saved a real configuration file and read it back.
+A new test used a different kind of cell to check that the callers actually delegated through the common interface.
+It also checked that a view shared by two layouts was written once.
+
+The second change passed all 35 tests in the affected Rust crates.
+One compared screen labels with table formatting; image tests checked appearance.
+I reviewed the expected label change before updating its reference image.
+Code checks and generated-output checks passed too.
+These results cover the affected parts, not every feature in Rerun.
+
+GRASP helped decide who should own the work, and Strategy gave the first change its structure.
+Both changes reduce duplicated knowledge, making future changes easier to keep consistent.”
+
+### What to show on screen
+
+1. Show the Composite diagram in Part 1 and point to `MultiSink`, its shared `LogSink` interface, and its child destinations.
+2. Show the Part 3 `table.py` diff and point to the removed preview type check and the new `self.cell._log_to_stream(...)` call.
+3. Show `_table_cells.py` and point to `PreviewCell`'s two methods so the class sees where the work moved.
+4. Show the Part 4 diff: the deleted name lookup and the call to `non_nested.to_string()`.
+5. Show the corrected `LargeBinary` snapshot if time permits, then state the test results.
+
+Use these commands from the repository root to prepare the local diffs:
+
+```sh
+git show fb7f743252 -- rerun_py/rerun_sdk/rerun/blueprint/table.py rerun_py/rerun_sdk/rerun/blueprint/_table_cells.py
+git show c51f3bc978 -- crates/viewer_support/re_arrow_ui/src/datatype_ui.rs crates/build/re_types_builder/src/codegen/docs/datatype_docs.rs
+```
+
+### Plain-language glossary
+
+| Term | Meaning for this presentation |
+| --- | --- |
+| Sink | A destination receiving recorded messages, such as a file or viewer. |
+| Blueprint | Instructions describing a display's layout and settings. |
+| SDK | A collection of tools another program uses to communicate with Rerun. |
+| Interface | A shared set of operations that different objects agree to provide. |
+| Delegation | Asking another object to perform work it owns. |
+| Refactoring | Changing the organization of code while preserving its intended behavior. |
+| Serialization | Turning objects and settings into information that can be saved or sent. |
+| Mock | A test substitute that records which operations were requested, without doing the real work. |
+| Regression test | A test that catches a mistake returning or a desired behavior being lost. |
+| Snapshot test | A comparison of current output with a previously reviewed reference, often an image. |
+| Rust | The programming language used for the second change; the first change is Python. |
+| Datatype | A description of what a value represents and how it is stored, such as a number or text. |
+
+### Questions about what the changes fix
+
+**Was the preview feature broken before?**
+
+No observed preview runtime bug motivated this change.
+The existing feature worked, but two callers owned preview-specific knowledge.
+The fix is to move that behavior into the preview cell and have the callers delegate through the common cell interface.
+That is a design improvement, not a new preview feature or a measured speed improvement.
+
+**What exactly is easier to change now?**
+
+For preview cells, their extra saved settings and their view dependencies are defined with the cell rather than implemented in two callers.
+The common caller operations also allow another internal cell implementation to supply behavior without a new preview-specific branch.
+This does not promise that users can add arbitrary new Viewer renderers; the Viewer still supports particular cell kinds.
+For datatype names, the screen and documentation generator no longer need their own primitive lookup lists.
+
+**Why does the table still handle shared views?**
+
+A single cell knows its own views, but the table knows about all of its layouts and columns.
+Only the table has the complete picture needed to identify a view shared by several cells or layouts.
+It therefore keeps that coordination responsibility and writes the shared view once.
+Moving every task into the cell would give it responsibilities it lacks the information to perform.
+
+**Why is this Strategy and not just moving functions around?**
+
+`Column` uses an object selected through its `cell` setting and asks it to perform common operations.
+The preview implementation supplies preview behavior, while the other implementations inherit empty defaults for extra settings and views.
+The caller uses the same operations regardless of the selected implementation.
+That combination of a context, a common behavioral interface, and interchangeable implementations is the Strategy structure.
+
+**What did the datatype change actually fix?**
+
+It removed duplicate responsibility for deciding primitive names.
+For non-nested types, the screen and table formatter now both use Arrow's existing datatype names.
+It also stopped hiding the distinction between ordinary and large-offset text and binary types in the screen labels.
+The documentation generator delegates atomic names to its own datatype model, which already derives a display implementation.
+
+**Does LargeBinary mean the data is larger or faster now?**
+
+No.
+The type already existed before the change.
+`LargeBinary` uses wider offsets to locate byte sequences, allowing a larger total range than ordinary `Binary`; the label now tells the truth about the existing type.
+We did not convert data, enlarge files, or measure a performance improvement.
+
+**Did you fix all of issue 11071?**
+
+No.
+This is a focused contribution toward that issue's duplicated primitive naming.
+Nested-type presentation and broader syntax-highlighting changes remain outside this commit.
+I would not claim that the commit closes the entire issue.
+
+### Questions about the tests
+
+**What did the 16 Python tests check?**
+
+The table-blueprint suite checked saved layout and column components, preview view references, shared-view logging, root settings, configuration validation, and the new delegation behavior.
+The saved-file tests created a real blueprint file and read its components back; they did not simply compare function names.
+The new delegation test used a recording-stream mock to observe the calls made by the Python code.
+Together these tests checked both real saved output and the particular object collaboration introduced by the refactoring.
+
+**How does the new test prove the old preview check is gone?**
+
+Its test cell inherits from a link cell, not from `PreviewCell`, and supplies view dependencies and its own logging behavior.
+The blueprint places it in both table and card layouts.
+The test expects its behavior to be called at both layout paths and its shared view to be logged once.
+The old code would ignore that behavior because its branches only recognized `PreviewCell`.
+The test exercises the internal interface; it does not introduce a new public cell kind.
+
+**What did the 35 Rust tests check?**
+
+These were the existing tests for the two affected crates, plus the new naming regression test.
+They included code-generator parsing and documentation behavior, text-formatting snapshots, and UI image comparisons.
+The new regression test compared the screen label with the table formatter's result for seven representative datatypes, including both ordinary and large-offset text and binary types and a timestamp.
+It checks agreement between two actual consumers, rather than maintaining another hand-written expected-name list.
+
+**Why did the image tests initially fail?**
+
+First, the reference images had not been downloaded: the checkout contained Git LFS pointer files instead of PNG image data.
+After fetching the real images, one reference differed because the intended label became `LargeBinary`.
+I visually compared the old and new images, confirmed that label correction, updated that single reference, and reran the tests.
+All 35 tests then passed.
+
+**Is updating a reference image just making a failing test pass?**
+
+It would be if done without checking why the output changed.
+Here the change was intentional, the independent label test required agreement with table formatting, and visual inspection confirmed the expected correction without unrelated layout changes.
+Only the affected reference was updated.
+A changed reference should be reviewed as part of the implementation, not treated as automatic approval of whatever the program produced.
+
+**What do Clippy and formatting checks prove?**
+
+Clippy checks Rust code for common mistakes and suspicious or unnecessarily complicated patterns.
+Formatting checks keep source code consistent and readable; they do not establish that the behavior is correct.
+The generated-output check confirmed that the documentation refactoring produced the same generated files.
+Those checks complement the behavior tests rather than replace them.
+
+**Why did a small Python change require a long build?**
+
+The Python code communicates with native components compiled from Rust.
+The checkout did not have matching native bindings installed, and the separately installed package was an older version.
+Building the matching SDK prepared the environment so the tests could exercise the real saved-file behavior.
+The build compiled many existing dependencies; that duration was not a measurement of the new code's runtime speed.
+
+**Do 51 passing tests prove the entire project works?**
+
+No.
+The 16 and 35 counts refer to the affected suites, not all tests in the repository.
+They provide evidence for output compatibility, delegation, naming consistency, and the tested UI appearance.
+They cannot cover every dataset, operating system, or interaction, and no benchmark established a speed improvement.
+
+### Questions about the assignment and contribution
+
+**Why are there two implementation commits?**
+
+Parts 2 and 3 require a GoF pattern implementation, while Part 4 requires a separate GRASP refactoring.
+The Strategy commit is `fb7f743252`; the Information Expert commit is `c51f3bc978`.
+Keeping them separate lets each change be reviewed and graded independently.
+
+**Was the glTF mesh issue fixed too?**
+
+No.
+It was investigated as a candidate, but the approved implementation was the table-cell Strategy.
+The glTF investigation found that loading the sample from its filesystem path worked while loading only its bytes failed to resolve external resources.
+That investigation did not become a code change in this assignment.
+
+**Has this been submitted to Rerun?**
+
+No upstream PR has been opened.
+The user authorized publishing the assignment commits on the fork branch `a8-design-patterns`.
+Pushing that branch does not submit or merge a change into upstream Rerun.
+The wiki draft has not been published; submitting a PR would be a separate action.
+
+### If time is running short
+
+Keep the Composite explanation, show the Strategy diff, and finish with: “The preview behavior now lives with the preview cell, so it is easier to change without editing the callers.”
+Mention the separate Information Expert change and the test counts briefly if time allows.
+Leave the detailed test discussion and issue-scope caveats for questions.
+
 ## Review status
 
 Parts 1 and 2 are drafted.
 Part 3 is implemented and its focused tests pass.
 Local implementation commit message: `A8: Apply Strategy to Column`.
 Part 4 is implemented and its affected-crate tests pass.
-Parts 5 and 6 have not been started.
+Part 5 is drafted for review.
+Part 6 includes a spoken script targeting four minutes and separate question-preparation notes.
+The presentation still needs a personal rehearsal to confirm delivery under five minutes.
 
 ## AI use log
 
@@ -484,3 +739,7 @@ Parts 5 and 6 have not been started.
 | 2026-10-14 | OpenAI Codex | Replaced the compression proposal with a Strategy for table cell configuration after reviewing existing preview-specific behavior in two callers. | Inspected the cell hierarchy, both serialization paths, and saved-blueprint and shared-preview tests. Recorded preservation of deduplication, logging order, public APIs, and separate validation rules. No implementation changes. |
 | 2026-10-14 | OpenAI Codex | Implemented the approved table-cell Strategy and added a regression test for generic cell delegation and shared-view deduplication. | Focused Python formatting and Ruff checks passed. The matching SDK build succeeded, all 16 table-blueprint tests passed, and fast-lint passed including Python type checking and codegen consistency. No pushes or external posts. |
 | 2026-10-14 | OpenAI Codex | Applied GRASP Information Expert to datatype naming for Part 4, removing duplicate UI and documentation primitive mappings and adding a cross-consumer naming regression test. | Rust formatting, Clippy, and final fast lint checks passed; all 35 affected-crate tests passed. Fetched missing Git LFS snapshot references, visually reviewed the intended LargeBinary label correction, and updated its one reference image. The documented scope is a focused contribution toward #11071, not the full syntax-highlighting request. |
+| 2026-10-14 | OpenAI Codex | Wrote the Part 5 comparison paragraph connecting GoF Strategy to GRASP Information Expert and Low Coupling using the implemented table-cell refactoring. | Checked the named methods and responsibilities against the Part 3 implementation; confirmed the comparison is one Markdown paragraph and both local documentation copies match. No code changes. |
+| 2026-10-14 | OpenAI Codex | Prepared a plain-language Part 6 presentation targeting four minutes, local diff commands, a glossary, and questions about behavior, tests, snapshots, and contribution scope. | Checked explanations against both implementation commits and test results. Distinguished the design refactoring from the visible label correction, affected-suite results from whole-project assurance, and investigated issues from implemented changes. Presentation timing requires human rehearsal. |
+| 2026-10-14 | OpenAI Codex | Researched upstream issues and compared possible GoF and GRASP contributions with the assignment. Investigated #11110 using its public mesh archive and a small isolated glTF loader probe; the user selected the table-cell Strategy for Parts 2–3 and a focused #11071 refactoring for Part 4. | Verified issue activity through the GitHub API. Confirmed the sample model’s external files exist and its binary size matches the declaration; byte-only loading failed while path-based loading succeeded. No glTF fix was implemented and no issue comments or PRs were posted. |
+| 2026-10-14 | OpenAI Codex | Updated the assignment AI Use Log and prepared the remaining comparison and presentation documentation for a separate documentation commit and user-authorized push to the fork. | Verified the push URL is `https://github.com/donnyboy72/rerun.git` and retained the two separate implementation commits. Prior validation: 16 Python tests, 35 Rust tests, SDK build, Clippy, formatting, UI snapshot review, and repository lint/codegen checks passed. Documentation lint passed and both local documentation copies match. Publication is authorized only to the fork branch; no upstream push or PR is included. |
