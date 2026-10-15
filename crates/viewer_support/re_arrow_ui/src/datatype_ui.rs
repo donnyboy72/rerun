@@ -90,15 +90,10 @@ impl<'a> DataTypeUi<'a> {
                     data_type_field_ui(ui, b);
                 })),
             },
-            non_nested => {
-                let label = simple_data_type_string(non_nested)
-                    .map(|s| s.to_owned())
-                    .unwrap_or_else(|| non_nested.to_string());
-                DataTypeUi {
-                    type_name: label,
-                    content: None,
-                }
-            }
+            non_nested => DataTypeUi {
+                type_name: non_nested.to_string(),
+                content: None,
+            },
         }
     }
 
@@ -155,24 +150,26 @@ fn data_type_field_ui(ui: &mut egui::Ui, field: &arrow::datatypes::Field) {
     }
 }
 
-// TODO(#11071): there is some overlap here with `re_arrow_util::format` and `codegen`.
-pub(crate) fn simple_data_type_string(datatype: &DataType) -> Option<&'static str> {
-    match datatype {
-        DataType::Null => Some("Null"),
-        DataType::Boolean => Some("Boolean"),
-        DataType::Int8 => Some("Int8"),
-        DataType::Int16 => Some("Int16"),
-        DataType::Int32 => Some("Int32"),
-        DataType::Int64 => Some("Int64"),
-        DataType::UInt8 => Some("UInt8"),
-        DataType::UInt16 => Some("UInt16"),
-        DataType::UInt32 => Some("UInt32"),
-        DataType::UInt64 => Some("UInt64"),
-        DataType::Float16 => Some("Float16"),
-        DataType::Float32 => Some("Float32"),
-        DataType::Float64 => Some("Float64"),
-        DataType::Utf8 | DataType::LargeUtf8 => Some("Utf8"),
-        DataType::Binary | DataType::LargeBinary => Some("Binary"),
-        _ => None,
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn datatype_labels_match_table_formatting() {
+        for datatype in [
+            DataType::Boolean,
+            DataType::Int32,
+            DataType::Utf8,
+            DataType::LargeUtf8,
+            DataType::Binary,
+            DataType::LargeBinary,
+            DataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None),
+        ] {
+            let field = arrow::datatypes::Field::new("value", datatype.clone(), true);
+            assert_eq!(
+                DataTypeUi::new(&datatype).type_name,
+                re_arrow_util::format_field_datatype(&field),
+            );
+        }
     }
 }

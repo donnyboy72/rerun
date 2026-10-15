@@ -436,14 +436,42 @@ The focused Python formatting and Ruff checks pass, and `pixi run fast-lint` pas
 The added regression test uses a non-preview cell subclass with view dependencies and verifies that both layouts delegate to it while its shared view is logged once.
 Existing tests verify the saved components for preview and flag columns and shared-preview deduplication.
 
-Part 4 is reserved for the separate datatype-formatting refactoring associated with issue #11071.
+Part 4 below documents the separate datatype-formatting refactoring associated with issue #11071.
+
+## Part 4 apply information expert to datatype naming
+
+`DataTypeUi` previously maintained a primitive-name lookup table, and the documentation generator maintained another, even though Arrow's `DataType` and the generator's `AtomicDataType` already provide names through `Display`.
+I removed those lookups and delegated naming to the datatype objects, applying GRASP Information Expert while leaving UI hierarchy and Markdown layout with their existing consumers.
+This reduces duplicated naming responsibility and aligns non-nested UI labels with table formatting, including preserving the distinction between `Utf8` and `LargeUtf8` and between `Binary` and `LargeBinary`.
+
+### Relationship to issue 11071
+
+This is a focused contribution toward [issue #11071](https://github.com/rerun-io/rerun/issues/11071), which identifies overlapping datatype-formatting implementations.
+It removes the duplicated primitive mappings in `DataTypeUi` and `atomic_datatype_docs` without creating a new abstraction or adding dependencies.
+The UI and table formatter now both obtain non-nested names from Arrow's `Display`; documentation obtains atomic names from its own datatype model's derived `Display` implementation.
+The generator uses a separate logical datatype model, so it continues to describe logical strings as `Utf8` rather than change its schema descriptions to physical storage types.
+
+The observable UI change is that large-offset string and binary types are labeled `LargeUtf8` and `LargeBinary`, rather than being shortened to `Utf8` and `Binary`.
+Other previously mapped primitive labels are unchanged, and parameterized types retain Arrow's existing names.
+Full unification of nested-type presentation and the issue's additional syntax-highlighting request remain outside this refactoring; this commit does not claim to close the entire issue.
+
+### Validation
+
+Rust formatting and Clippy passed for both affected crates.
+All 35 affected-crate tests passed with `cargo nextest run -p re_arrow_ui -p re_types_builder --all-features --no-fail-fast`, including the UI image tests.
+A regression test compares non-nested UI labels with the actual table formatter for primitives, large-offset variants, and a timestamp.
+The `LargeBinary` reference image was updated after visually confirming that the only change is its corrected datatype label.
+Final fast lint checks passed, including generated-code consistency checking, confirming that replacing the documentation lookup does not change generated output.
+
+Local commit message: `A8-GRASP: Refactor DataTypeUi to apply Information Expert`.
 
 ## Review status
 
 Parts 1 and 2 are drafted.
 Part 3 is implemented and its focused tests pass.
 Local implementation commit message: `A8: Apply Strategy to Column`.
-Parts 4 through 6 have not been started; Part 4 will investigate issue #11071 separately.
+Part 4 is implemented and its affected-crate tests pass.
+Parts 5 and 6 have not been started.
 
 ## AI use log
 
@@ -455,3 +483,4 @@ Parts 4 through 6 have not been started; Part 4 will investigate issue #11071 se
 | 2026-10-14 | OpenAI Codex | Expanded Part 2 with a hypothetical third-algorithm maintenance example, proposed interface and byte ownership, encoding and decoding flows, and concrete benefits and costs. | Preserved the distinction between existing source and proposed pseudocode, the existing decompression limits, and the protocol compatibility requirements. No implementation changes. |
 | 2026-10-14 | OpenAI Codex | Replaced the compression proposal with a Strategy for table cell configuration after reviewing existing preview-specific behavior in two callers. | Inspected the cell hierarchy, both serialization paths, and saved-blueprint and shared-preview tests. Recorded preservation of deduplication, logging order, public APIs, and separate validation rules. No implementation changes. |
 | 2026-10-14 | OpenAI Codex | Implemented the approved table-cell Strategy and added a regression test for generic cell delegation and shared-view deduplication. | Focused Python formatting and Ruff checks passed. The matching SDK build succeeded, all 16 table-blueprint tests passed, and fast-lint passed including Python type checking and codegen consistency. No pushes or external posts. |
+| 2026-10-14 | OpenAI Codex | Applied GRASP Information Expert to datatype naming for Part 4, removing duplicate UI and documentation primitive mappings and adding a cross-consumer naming regression test. | Rust formatting, Clippy, and final fast lint checks passed; all 35 affected-crate tests passed. Fetched missing Git LFS snapshot references, visually reviewed the intended LargeBinary label correction, and updated its one reference image. The documented scope is a focused contribution toward #11071, not the full syntax-highlighting request. |
