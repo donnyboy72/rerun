@@ -421,6 +421,69 @@ It retains its dictionary keyed by blueprint path so shared views are logged onc
 `Column` retains common column properties and delegates only the cell-specific configuration.
 The editing and card-layout restrictions on `FlagCell` remain validation responsibilities and are unchanged.
 
+### Where these changes sit in Rerun
+
+This is a simplified system-context diagram, not a complete map of Rerun.
+Solid arrows show information moving between parts of the program; dotted arrows show a request for datatype names.
+The highlighted boxes are the code changed in this assignment.
+
+```mermaid
+flowchart TB
+    subgraph runtime[When a user runs Rerun]
+        APP["User program: records images, measurements, and other data"]
+        subgraph python[Python SDK: tools the user program calls]
+            BP["TableBlueprint and Column: organize table and card layouts"]
+            CELL["PARTS 2 AND 3: cell Strategy in _Cell and PreviewCell"]
+            CFG["Blueprint recording stream: saves or sends display instructions"]
+            BP -->|"Delegates extra settings and asks for required views"| CELL
+            CELL -->|"Writes cell-specific configuration"| CFG
+            BP -->|"Writes common settings and shared views once"| CFG
+        end
+        DELIVERY["Recording and delivery: files or live streams"]
+        subgraph viewer[Rust Viewer: displays recorded information]
+            STORE["Loaded data and blueprint settings"]
+            LAYOUT["Table and card display: follows blueprint instructions"]
+            UI["PART 4: DataTypeUi labels types in the data inspector"]
+            STORE -->|"Display configuration"| LAYOUT
+            STORE -->|"Column type information"| UI
+        end
+        APP -->|"Calls Python configuration API"| BP
+        APP -->|"Logs recorded data through an SDK"| DELIVERY
+        CFG -->|"Saved or transmitted blueprint settings"| DELIVERY
+        DELIVERY -->|"Loads or receives data and settings"| STORE
+    end
+    subgraph shared[Shared data utilities]
+        ARROW["Arrow DataType: existing datatype names through Display"]
+        TABLE["Text-table formatter: already uses Arrow datatype names"]
+        UI -.->|"Asks for non-nested names after Part 4"| ARROW
+        TABLE -.->|"Asks for names"| ARROW
+    end
+    subgraph development[Separate development tool: runs during code generation]
+        DOC["PART 4: documentation generator formats datatype descriptions"]
+        ATOMIC["Generator AtomicDataType: existing names through Display"]
+        OUTPUT["Generated Markdown documentation"]
+        DOC -.->|"Asks for atomic names"| ATOMIC
+        DOC -->|"Writes descriptions"| OUTPUT
+    end
+    classDef changed fill:#fff3c4,stroke:#9a6700,stroke-width:3px,color:#24292f
+    class CELL,UI,DOC changed
+```
+
+**Parts 2 and 3 are in the Python configuration layer.**
+They change how display instructions are assembled before they are saved or sent to the Viewer.
+They do not implement drawing in the Viewer; the preview cell supplies configuration that the existing Viewer understands.
+The real files are `rerun_py/rerun_sdk/rerun/blueprint/table.py` and `rerun_py/rerun_sdk/rerun/blueprint/_table_cells.py`.
+
+**Part 4 touches two separate consumers of datatype names.**
+`DataTypeUi` is in the Rust Viewer's data-inspection UI, while the documentation generator is a development tool, not something running each time the Viewer draws a frame.
+The real files are `crates/viewer_support/re_arrow_ui/src/datatype_ui.rs` and `crates/build/re_types_builder/src/codegen/docs/datatype_docs.rs`.
+Arrow's datatype model and the generator's logical datatype model are separate; the diagram therefore shows two naming providers.
+The text-table formatter is shown for comparison and was not changed by Part 4.
+
+There is no direct call from the Python cell Strategy to `DataTypeUi` or to the documentation generator.
+These are separate changes in the same project, rather than consecutive steps of one new feature.
+For class, describe the first as “preparing the display instructions” and the second as “asking the right object for a datatype label.”
+
 ### Before and after who handles preview settings
 
 Read the arrows as “asks” or “does work for.”
@@ -809,3 +872,4 @@ The presentation still needs a personal rehearsal to confirm delivery under five
 | 2026-10-14 | OpenAI Codex | Researched upstream issues and compared possible GoF and GRASP contributions with the assignment. Investigated #11110 using its public mesh archive and a small isolated glTF loader probe; the user selected the table-cell Strategy for Parts 2–3 and a focused #11071 refactoring for Part 4. | Verified issue activity through the GitHub API. Confirmed the sample model’s external files exist and its binary size matches the declaration; byte-only loading failed while path-based loading succeeded. No glTF fix was implemented and no issue comments or PRs were posted. |
 | 2026-10-14 | OpenAI Codex | Updated the assignment AI Use Log and prepared the remaining comparison and presentation documentation for a separate documentation commit and user-authorized push to the fork. | Verified the push URL is `https://github.com/donnyboy72/rerun.git` and retained the two separate implementation commits. Prior validation: 16 Python tests, 35 Rust tests, SDK build, Clippy, formatting, UI snapshot review, and repository lint/codegen checks passed. Documentation lint passed and both local documentation copies match. Publication is authorized only to the fork branch; no upstream push or PR is included. |
 | 2026-10-14 | OpenAI Codex | Added two Mermaid before-and-after responsibility diagrams explaining the Part 2–3 Strategy and Part 4 Information Expert refactoring, with plain-language labels beside real type names. | Checked arrows against the implementation: cells own extra configuration, TableBlueprint retains shared-view coordination, and naming delegates to the two existing datatype models. Diagram source is also saved in the repository documentation. |
+| 2026-10-14 | OpenAI Codex | Added a system-context diagram locating the cell Strategy in Python blueprint configuration and datatype naming in the Rust Viewer and separate documentation tool. | Checked the diagram against the changed source files and existing responsibilities; distinguished configuration from drawing, runtime from code generation, and the two datatype naming models. |
