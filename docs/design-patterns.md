@@ -421,6 +421,39 @@ It retains its dictionary keyed by blueprint path so shared views are logged onc
 `Column` retains common column properties and delegates only the cell-specific configuration.
 The editing and card-layout restrictions on `FlagCell` remain validation responsibilities and are unchanged.
 
+### Before and after who handles preview settings
+
+Read the arrows as “asks” or “does work for.”
+Before the refactoring, two callers knew the details of a preview cell.
+Afterward, they ask through shared cell operations, and `PreviewCell` handles its own special configuration.
+
+```mermaid
+flowchart TB
+    subgraph before[Before the change]
+        BC["Column: writes common column settings"]
+        BT["TableBlueprint: organizes layouts"]
+        BP["PreviewCell: holds its views"]
+        BC -->|"Checks for PreviewCell and builds preview settings"| BP
+        BT -->|"Checks for PreviewCell and extracts its views"| BP
+    end
+    subgraph after[After the change]
+        AC["Column: writes common column settings"]
+        AT["TableBlueprint: gathers views and writes each shared view once"]
+        AI["Shared _Cell operations: log settings and supply required views"]
+        AP["PreviewCell: supplies its views and writes preview settings"]
+        AO["Other cells: no extra settings or required views by default"]
+        AC -->|"Asks cell to write its extra settings"| AI
+        AT -->|"Asks each cell which views it needs"| AI
+        AI -->|"Selected cell is a preview"| AP
+        AI -->|"Selected cell is another kind"| AO
+    end
+```
+
+The shared `_Cell` operations are the Strategy interface, not an extra object that receives messages at runtime.
+The calls go directly to the selected cell's method implementations.
+`TableBlueprint` still coordinates shared views because it knows about all layouts; that responsibility did not move into individual cells.
+This diagram explains the problem identified in Part 2 and the implementation in Part 3.
+
 ### What is easier to change
 
 Preview serialization and the interpretation of preview view dependencies now live with `PreviewCell` rather than in two consumers.
@@ -443,6 +476,38 @@ Part 4 below documents the separate datatype-formatting refactoring associated w
 `DataTypeUi` previously maintained a primitive-name lookup table, and the documentation generator maintained another, even though Arrow's `DataType` and the generator's `AtomicDataType` already provide names through `Display`.
 I removed those lookups and delegated naming to the datatype objects, applying GRASP Information Expert while leaving UI hierarchy and Markdown layout with their existing consumers.
 This reduces duplicated naming responsibility and aligns non-nested UI labels with table formatting, including preserving the distinction between `Utf8` and `LargeUtf8` and between `Binary` and `LargeBinary`.
+
+### Before and after who supplies datatype names
+
+Before the change, consumers repeated naming rules that datatype objects already provided.
+Afterward, consumers ask those objects for their names and retain their own display or documentation layout work.
+
+```mermaid
+flowchart TB
+    subgraph before[Before the change]
+        BU["DataTypeUi: screen code maintains a primitive-name lookup"]
+        BD["Documentation generator: maintains another atomic-name lookup"]
+        BT["Table formatter: already asks Arrow for names"]
+        BA["Arrow DataType: already provides Display names"]
+        BG["Generator AtomicDataType: already provides Display names"]
+        BT -->|"Uses existing names"| BA
+    end
+    subgraph after[After the change]
+        AU["DataTypeUi: builds the screen display"]
+        AT["Table formatter: builds text tables"]
+        AD["Documentation generator: builds Markdown"]
+        AA["Arrow DataType: supplies names through Display"]
+        AG["Generator AtomicDataType: supplies names through Display"]
+        AU -->|"Asks for non-nested type names"| AA
+        AT -->|"Already asks for datatype names"| AA
+        AD -->|"Asks for atomic type names"| AG
+    end
+```
+
+There are two datatype models, so the result is not one universal naming object.
+The UI and table formatting share Arrow's names, while generated documentation uses its own logical model.
+For example, the screen now says `LargeBinary` when that is the actual type, instead of shortening its name to `Binary`.
+The change removes duplicate primitive lookups; it does not unify every nested-type layout or implement the rest of issue #11071.
 
 ### Relationship to issue 11071
 
@@ -743,3 +808,4 @@ The presentation still needs a personal rehearsal to confirm delivery under five
 | 2026-10-14 | OpenAI Codex | Prepared a plain-language Part 6 presentation targeting four minutes, local diff commands, a glossary, and questions about behavior, tests, snapshots, and contribution scope. | Checked explanations against both implementation commits and test results. Distinguished the design refactoring from the visible label correction, affected-suite results from whole-project assurance, and investigated issues from implemented changes. Presentation timing requires human rehearsal. |
 | 2026-10-14 | OpenAI Codex | Researched upstream issues and compared possible GoF and GRASP contributions with the assignment. Investigated #11110 using its public mesh archive and a small isolated glTF loader probe; the user selected the table-cell Strategy for Parts 2–3 and a focused #11071 refactoring for Part 4. | Verified issue activity through the GitHub API. Confirmed the sample model’s external files exist and its binary size matches the declaration; byte-only loading failed while path-based loading succeeded. No glTF fix was implemented and no issue comments or PRs were posted. |
 | 2026-10-14 | OpenAI Codex | Updated the assignment AI Use Log and prepared the remaining comparison and presentation documentation for a separate documentation commit and user-authorized push to the fork. | Verified the push URL is `https://github.com/donnyboy72/rerun.git` and retained the two separate implementation commits. Prior validation: 16 Python tests, 35 Rust tests, SDK build, Clippy, formatting, UI snapshot review, and repository lint/codegen checks passed. Documentation lint passed and both local documentation copies match. Publication is authorized only to the fork branch; no upstream push or PR is included. |
+| 2026-10-14 | OpenAI Codex | Added two Mermaid before-and-after responsibility diagrams explaining the Part 2–3 Strategy and Part 4 Information Expert refactoring, with plain-language labels beside real type names. | Checked arrows against the implementation: cells own extra configuration, TableBlueprint retains shared-view coordination, and naming delegates to the two existing datatype models. Diagram source is also saved in the repository documentation. |
