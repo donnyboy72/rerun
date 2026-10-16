@@ -309,19 +309,20 @@ This proposal has not been implemented.
 
 ### The concrete problem today
 
-`PreviewCell` already owns its embedded `View` objects, but the callers implement the behavior associated with those objects.
-`Column._log_to_stream()` checks whether its cell is specifically a `PreviewCell` and builds the preview configuration from `self.cell.views`.
-Separately, `TableBlueprint._log_to_stream()` checks every column for `PreviewCell` and reaches into `column.cell.views` to discover the views it must write to the recording stream.
+A preview cell needs two things saved: the view it will display and settings that tell the cell which view to use.
+Before our change, `PreviewCell` held the views, but two other classes handled the special instructions for saving them:
 
-The same cell-specific knowledge is spread across two callers: both know that previews contain views, while one also knows the preview archetype and the representation of view references.
-The cell itself mostly stores data and a kind identifier.
-That makes the generic column and blueprint classes responsible for part of a concrete cell type's serialization behavior.
-This coupling exists today, even without adding any new cell types.
+- `TableBlueprint` checked whether each cell was a preview, took its views, and saved the view definitions.
+- `Column` also checked whether its cell was a preview and built the settings that pointed to those views.
 
-For example, configuring a preview column with a `Spatial2DView` requires two coordinated steps: write the view definition and write its path into the preview column's configuration.
-Those steps are currently implemented in different callers rather than exposed by the object that owns the view.
-A developer maintaining preview serialization must understand and update that distributed behavior.
-A cell needing similar resources cannot express that behavior through the current `_Cell` interface, which only provides `_kind`.
+This worked, but both classes needed to know the special rules for previews.
+Someone changing how preview settings were saved could have to update both places, even though `PreviewCell` already held the information they needed.
+
+Our change lets the callers ask the cell two questions: “Which views do you need?” and “Please save your extra settings.”
+`PreviewCell` supplies the preview-specific answers, while `TableBlueprint` still makes sure shared views are saved only once.
+The table looks the same; the special instructions now live with the preview cell instead of being spread across its callers.
+
+The excerpts below show the code **before** the refactoring.
 
 **Existing preview handling in `Column._log_to_stream()`** (`table.py:132`):
 
@@ -557,6 +558,27 @@ The calls go directly to the selected cell's method implementations.
 `TableBlueprint` still coordinates shared views because it knows about all layouts; that responsibility did not move into individual cells.
 This diagram explains the problem identified in Part 2 and the implementation in Part 3.
 
+### Minecraft analogy for the strategy change
+
+Imagine a program that saves a Minecraft storage room containing ordinary chests and shulker boxes so it can rebuild the room later.
+In this simplified analogy, shulker boxes require extra information and settings beyond the common container settings.
+Before the refactoring, the room manager and container organizer each recognize shulker boxes and implement their special rules themselves.
+Afterward, they ask every container the same questions: “What extra information do you need saved?” and “Please write your special settings.”
+The shulker box object supplies its own special behavior; ordinary containers use the default behavior when nothing extra is needed.
+
+| Minecraft analogy | Rerun connection |
+| --- | --- |
+| Room manager organizing the whole storage room | `TableBlueprint` coordinates all layouts and saves each shared view once. |
+| Container organizer handling common names and locations | `Column` writes common settings such as the column name and visibility. |
+| Questions every container agrees to answer | The `_Cell` interface provides `_blueprint_views()` and `_log_to_stream()`. |
+| Shulker box supplying its special information and settings | `PreviewCell` supplies required views and writes its own preview settings. |
+| Ordinary container with no extra work in this simplified example | Other cells inherit no extra views and no additional configuration by default. |
+| Rebuilt storage room looks the same | The displayed table and saved configuration remain the same after the refactoring. |
+
+The Strategy connection is that organizers use common operations while the selected object supplies the behavior.
+Instead of saying “I recognize your type, so I will handle your special rules,” the organizer says “You handle your special rules.”
+This analogy explains our code organization; it does not describe Minecraft's actual implementation or claim ordinary Minecraft chests contain no saved data.
+
 ### What is easier to change
 
 Preview serialization and the interpretation of preview view dependencies now live with `PreviewCell` rather than in two consumers.
@@ -579,6 +601,109 @@ Part 4 below documents the separate datatype-formatting refactoring associated w
 `DataTypeUi` previously maintained a primitive-name lookup table, and the documentation generator maintained another, even though Arrow's `DataType` and the generator's `AtomicDataType` already provide names through `Display`.
 I removed those lookups and delegated naming to the datatype objects, applying GRASP Information Expert while leaving UI hierarchy and Markdown layout with their existing consumers.
 This reduces duplicated naming responsibility and aligns non-nested UI labels with table formatting, including preserving the distinction between `Utf8` and `LargeUtf8` and between `Binary` and `LargeBinary`.
+
+### Before and after code
+
+These excerpts come from the parent and result of [the Part 4 commit](https://github.com/donnyboy72/rerun/commit/c51f3bc97829fce3f04125f94b6c098cb6c9a78f).
+They show the naming changes; surrounding layout code is omitted.
+
+**Viewer before:** `DataTypeUi` first tried its own lookup and only asked the datatype for a name when that lookup had no answer.
+The following is the non-nested branch of its existing match expression:
+
+```rust
+non_nested => {
+    let label = simple_data_type_string(non_nested)
+        .map(|s| s.to_owned())
+        .unwrap_or_else(|| non_nested.to_string());
+    DataTypeUi {
+        type_name: label,
+        content: None,
+    }
+}
+```
+
+That branch used this hand-written lookup:
+
+```rust
+pub(crate) fn simple_data_type_string(datatype: &DataType) -> Option<&'static str> {
+    match datatype {
+        DataType::Null => Some("Null"),
+        DataType::Boolean => Some("Boolean"),
+        DataType::Int8 => Some("Int8"),
+        DataType::Int16 => Some("Int16"),
+        DataType::Int32 => Some("Int32"),
+        DataType::Int64 => Some("Int64"),
+        DataType::UInt8 => Some("UInt8"),
+        DataType::UInt16 => Some("UInt16"),
+        DataType::UInt32 => Some("UInt32"),
+        DataType::UInt64 => Some("UInt64"),
+        DataType::Float16 => Some("Float16"),
+        DataType::Float32 => Some("Float32"),
+        DataType::Float64 => Some("Float64"),
+        DataType::Utf8 | DataType::LargeUtf8 => Some("Utf8"),
+        DataType::Binary | DataType::LargeBinary => Some("Binary"),
+        _ => None,
+    }
+}
+```
+
+**Viewer after:** the lookup was removed, and the branch asks the datatype for its name directly:
+
+```rust
+non_nested => DataTypeUi {
+    type_name: non_nested.to_string(),
+    content: None,
+},
+```
+
+In plain language, `to_string()` asks the datatype to describe itself as text using its existing `Display` implementation.
+For example, `LargeBinary` now produces the label `LargeBinary` instead of being renamed `Binary` by the extra lookup.
+`content: None` is unchanged: this branch has no expandable child fields to display.
+
+**Documentation before:** the generator also maintained its own list of names:
+
+```rust
+fn atomic_datatype_docs(page: &mut String, datatype: &AtomicDataType) {
+    match datatype {
+        AtomicDataType::Null => page.push_str("Null"),
+        AtomicDataType::Boolean => page.push_str("Boolean"),
+        AtomicDataType::Int8 => page.push_str("Int8"),
+        AtomicDataType::Int16 => page.push_str("Int16"),
+        AtomicDataType::Int32 => page.push_str("Int32"),
+        AtomicDataType::Int64 => page.push_str("Int64"),
+        AtomicDataType::UInt8 => page.push_str("UInt8"),
+        AtomicDataType::UInt16 => page.push_str("UInt16"),
+        AtomicDataType::UInt32 => page.push_str("UInt32"),
+        AtomicDataType::UInt64 => page.push_str("UInt64"),
+        AtomicDataType::Float16 => page.push_str("Float16"),
+        AtomicDataType::Float32 => page.push_str("Float32"),
+        AtomicDataType::Float64 => page.push_str("Float64"),
+    }
+}
+```
+
+Its atomic-type branch called that helper:
+
+```rust
+DataType::Atomic(atomic) => {
+    atomic_datatype_docs(page, atomic);
+}
+```
+
+**Documentation after:** the helper was removed, and the branch uses the atomic datatype's existing display behavior:
+
+```rust
+DataType::Atomic(atomic) => {
+    write!(page, "{atomic}").ok();
+}
+```
+
+Here, `write!` appends the datatype's name to the documentation text in `page`.
+The `{atomic}` expression uses the generator datatype's already-derived `Display` implementation.
+The names in the generated documentation remain the same, but the documentation writer no longer maintains another list of them.
+
+**GRASP connection:** Information Expert assigns naming to the datatype objects that already supply the names.
+The UI still handles screen layout, and the generator still handles documentation layout.
 
 ### Before and after who supplies datatype names
 
@@ -650,7 +775,7 @@ The spoken text is about four minutes at a comfortable pace; rehearse it once an
 The question preparation below is separate from the spoken script.
 
 Use the Markdown page and Git diffs while presenting.
-The wiki draft is local; publishing it is separate from pushing the repository branch.
+This page is the assignment wiki page; the implementation commits are on the fork branch `a8-design-patterns`.
 Keep the Part 1 Composite diagram and the two implementation diffs ready in separate tabs or terminal views.
 No slides are needed.
 
@@ -876,9 +1001,9 @@ That investigation did not become a code change in this assignment.
 **Has this been submitted to Rerun?**
 
 No upstream PR has been opened.
-The user authorized publishing the assignment commits on the fork branch `a8-design-patterns`.
+The assignment commits were pushed to the fork branch `a8-design-patterns` with user authorization.
 Pushing that branch does not submit or merge a change into upstream Rerun.
-The wiki draft has not been published; submitting a PR would be a separate action.
+The assignment page is hosted in the fork wiki; submitting an upstream PR would be a separate action.
 
 ### If time is running short
 
@@ -911,6 +1036,11 @@ The presentation still needs a personal rehearsal to confirm delivery under five
 | 2026-10-14 | OpenAI Codex | Prepared a plain-language Part 6 presentation targeting four minutes, local diff commands, a glossary, and questions about behavior, tests, snapshots, and contribution scope. | Checked explanations against both implementation commits and test results. Distinguished the design refactoring from the visible label correction, affected-suite results from whole-project assurance, and investigated issues from implemented changes. Presentation timing requires human rehearsal. |
 | 2026-10-14 | OpenAI Codex | Researched upstream issues and compared possible GoF and GRASP contributions with the assignment. Investigated #11110 using its public mesh archive and a small isolated glTF loader probe; the user selected the table-cell Strategy for Parts 2–3 and a focused #11071 refactoring for Part 4. | Verified issue activity through the GitHub API. Confirmed the sample model’s external files exist and its binary size matches the declaration; byte-only loading failed while path-based loading succeeded. No glTF fix was implemented and no issue comments or PRs were posted. |
 | 2026-10-14 | OpenAI Codex | Updated the assignment AI Use Log and prepared the remaining comparison and presentation documentation for a separate documentation commit and user-authorized push to the fork. | Verified the push URL is `https://github.com/donnyboy72/rerun.git` and retained the two separate implementation commits. Prior validation: 16 Python tests, 35 Rust tests, SDK build, Clippy, formatting, UI snapshot review, and repository lint/codegen checks passed. Documentation lint passed and both local documentation copies match. Publication is authorized only to the fork branch; no upstream push or PR is included. |
+| 2026-10-14 | OpenAI Codex | Prepared the completed Design Patterns page for user-authorized publication to the fork wiki and linked it from the wiki home page. | Verified the wiki push remote is `https://github.com/donnyboy72/rerun.wiki.git`, checked the page against the completed repository documentation, and updated publication status text. No upstream PR or upstream push is included. |
 | 2026-10-14 | OpenAI Codex | Added two Mermaid before-and-after responsibility diagrams explaining the Part 2–3 Strategy and Part 4 Information Expert refactoring, with plain-language labels beside real type names. | Checked arrows against the implementation: cells own extra configuration, TableBlueprint retains shared-view coordination, and naming delegates to the two existing datatype models. Diagram source is also saved in the repository documentation. |
 | 2026-10-14 | OpenAI Codex | Added a system-context diagram locating the cell Strategy in Python blueprint configuration and datatype naming in the Rust Viewer and separate documentation tool. | Checked the diagram against the changed source files and existing responsibilities; distinguished configuration from drawing, runtime from code generation, and the two datatype naming models. |
 | 2026-10-15 | OpenAI Codex | Expanded Observer, Builder, Composite, and Strategy with GoF intent, standard roles, categories, and everyday examples before the project-specific explanations. | Checked that Observer describes one-to-many notification, Builder distinguishes construction from representation, Composite describes part-whole structure, and Strategy describes interchangeable behavior. Distinguished the fluent Rust Builder variation from the classic GoF structure. |
+| 2026-10-15 | OpenAI Codex | Added the requested Minecraft analogy connection table to the Strategy explanation. | Mapped the analogy to the actual responsibilities of TableBlueprint, Column, _Cell, and PreviewCell, and clarified that the analogy is not Minecraft implementation documentation. |
+| 2026-10-15 | OpenAI Codex | Simplified the Part 2 problem explanation into the two required pieces of preview configuration, the callers’ previous roles, and the new cell-owned behavior. | Preserved the distinction between view definitions and references, shared-view coordination, and before-change code excerpts. |
+| 2026-10-16 | OpenAI Codex | Added before-and-after Rust code for both Part 4 naming changes, with plain-language explanations and a link to the implementation commit. | Extracted the UI branch and removed lookup functions directly from commit c51f3bc978 and its parent; checked the replacement documentation branch against the commit. No implementation changes. |
+| 2026-10-16 | OpenAI Codex | Explained Observer’s role, table and column responsibilities, the Strategy before-and-after behavior using Minecraft, and the Part 4 Rust code. Clarified that non_nested is a match binding, datatype descriptions are separate from recorded values, and to_string produces a UI label rather than a cross-language data representation. Updated submission materials and synchronized the repository documentation with the wiki. | Checked explanations against both implementation commits and existing datatype naming code. Verified the wiki contains Parts 1–6 and six Mermaid diagrams, retained the two distinct code commits, and checked that diagram source is included under docs. No implementation code changed; previously passing results remain 16 Python tests and 35 Rust tests. |
