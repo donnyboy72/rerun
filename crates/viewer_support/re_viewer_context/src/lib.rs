@@ -38,6 +38,7 @@ mod maybe_mut_ref;
 mod query_context;
 mod query_range;
 mod recording_or_table;
+mod relative_time_range;
 mod route;
 mod selection_state;
 mod storage_context;
@@ -47,6 +48,7 @@ mod syntax_highlighting;
 mod tables;
 mod tensor;
 mod time_control;
+mod time_drag_value;
 mod typed_entity_collections;
 mod undo;
 mod utils;
@@ -77,6 +79,7 @@ pub use self::app_options::{AppOptions, ExperimentalAppOptions, VideoOptions};
 pub use self::audio_output::AudioOutput;
 pub use self::blueprint_helpers::{
     AppBlueprintCtx, BlueprintContext, blueprint_timeline, blueprint_timepoint_for_writes,
+    entity_path_for_view_property,
 };
 pub use self::blueprint_id::{
     BlueprintId, BlueprintIdRegistry, ContainerId, GLOBAL_VIEW_ID, ViewId,
@@ -129,6 +132,9 @@ pub use self::query_context::{
 };
 pub use self::query_range::QueryRange;
 pub use self::recording_or_table::RecordingOrLocalTable;
+pub use self::relative_time_range::{
+    RelativeTimeRange, relative_time_range_boundary_label_text, relative_time_range_label_text,
+};
 pub use self::route::{EntryKind, Route};
 pub use self::selection_state::{
     ApplicationSelectionState, HoverHighlight, InteractionHighlight, SelectionChange,
@@ -145,6 +151,7 @@ pub use self::time_control::{
     TimeControlResponse, TimeControlUpdateParams, TimeRangeHighlight, TimeRangeHighlightKind,
     TimeView, time_panel_blueprint_entity_path,
 };
+pub use self::time_drag_value::TimeDragValue;
 pub use self::typed_entity_collections::{
     BufferAndFormatMatch, ComponentMatch, IndicatedEntities, PerVisualizerInstruction,
     PerVisualizerType, PerVisualizerTypeInViewClass, SingleRequiredComponentMatch,
@@ -170,6 +177,7 @@ pub use self::view::{
     VisualizerExecutionOutput, VisualizerInstruction, VisualizerInstructionReport,
     VisualizerInstructionsPerType, VisualizerQueryInfo, VisualizerReportContext, VisualizerSystem,
     VisualizerTypeReport, VisualizerViewReport, VisualizersSectionOutput, VisualizersSectionUi,
+    default_view_entity_drop,
 };
 pub use self::viewer_context::ViewerContext;
 pub use self::visitor_flow_control::VisitorControlFlow; // Historical reasons
