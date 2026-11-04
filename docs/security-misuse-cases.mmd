@@ -1,0 +1,40 @@
+flowchart LR
+    developer[Developer or analyst]
+    attacker[Attacker: reachable peer or malicious supplier]
+    maintainer[Maintainer]
+    subgraph Rerun and build workflow
+        log([Log time aware data])
+        save([Save recording file])
+        explore([Explore recording over time])
+        live([Receive live recording])
+        import([Import external model])
+        build([Build and install Rerun])
+        steal([MC1 Read or inject recording data])
+        exhaust([MC2 Exhaust resources through model parsing])
+        execute([MC3 Execute an untrusted importer])
+        supply([MC4 Substitute a build dependency or artifact])
+        local[Loopback default and explicit remote access]
+        budget[Parser limits and isolation]
+        approve[Explicit trusted importer registration]
+        attest[Verified build provenance]
+    end
+    developer --> log
+    developer --> save
+    developer --> explore
+    developer --> live
+    developer --> import
+    maintainer --> build
+    attacker --> steal
+    attacker --> exhaust
+    attacker --> execute
+    attacker --> supply
+    steal -->|threatens| live
+    steal -->|threatens| log
+    exhaust -->|threatens| explore
+    exhaust -->|threatens| import
+    execute -->|threatens| import
+    supply -->|threatens| build
+    local -->|mitigates| steal
+    budget -->|mitigates| exhaust
+    approve -->|mitigates| execute
+    attest -->|mitigates| supply

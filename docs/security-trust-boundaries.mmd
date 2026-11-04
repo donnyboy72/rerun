@@ -1,0 +1,35 @@
+flowchart LR
+    subgraph Untrusted sources
+        peer[Network SDK client or peer]
+        browser[Browser and web origin]
+        files[Local or downloaded model and recording]
+    end
+    subgraph Workstation process
+        proxy[gRPC recording proxy]
+        decode[Importers and decoders]
+        store[Recording store and Viewer]
+        control[Loopback-only Viewer control]
+    end
+    subgraph Separate executable
+        plugin[External importer from PATH]
+    end
+    subgraph Local storage
+        disk[Saved RRD file]
+    end
+    subgraph External supply chain
+        registry[Package registries and action repositories]
+        ci[Pixi and CI build environment]
+        artifact[Release artifact]
+    end
+    peer -->|1 recording messages and requests| proxy
+    browser -->|2 grpc-web requests and Origin| proxy
+    files -->|3 file bytes| decode
+    proxy -->|4 protobuf and Arrow data| decode
+    decode -->|5 decoded chunks| store
+    store -->|6 selected path and recording bytes| disk
+    decode -->|7 file path and CLI arguments| plugin
+    plugin -->|8 stdout RRD bytes| decode
+    peer -->|9 Viewer-control requests| control
+    registry -->|10 packages and build actions| ci
+    ci -->|11 release bytes and claimed source revision| artifact
+    artifact -->|12 installed executable| store
