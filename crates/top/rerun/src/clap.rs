@@ -86,7 +86,10 @@ pub struct RerunArgs {
     newest_first: bool,
 
     /// What bind address IP to use.
-    #[clap(long, default_value = "0.0.0.0")]
+    ///
+    /// Defaults to the IPv4 loopback interface for local Viewer use.
+    /// Use `--bind 0.0.0.0` or another address for explicit remote listening.
+    #[clap(long, default_value = "127.0.0.1")]
     bind: String,
 }
 
