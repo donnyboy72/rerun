@@ -40,3 +40,50 @@ The characterization command is:
 The initial characterization run passed all 31 tests.
 The tests use real Arrow arrays and Rerun data objects, while replacing external recording operations at the side-effect boundary.
 The invalid-environment characterization tests run after import and preserve existing behavior; the later regression tests exercise fresh interpreter startup, where the real defect occurs.
+
+## Final results and review
+
+The primary comparison is `matched-before-coverage.*` against `matched-after-coverage.*`.
+Both use the restored fixtures, the repository Viewer, and the full Python SDK suite with local servers permitted.
+The matched baseline used the exact `main` version of `error_utils.py` with the two new test files excluded.
+The final run used the refactored fix and all tests.
+The original source was restored automatically after measuring the baseline.
+
+| Metric | Matched baseline | Final |
+| --- | ---: | ---: |
+| Python SDK line coverage | 74.5431% | 74.7379% |
+| Python SDK branch coverage | 50.2462% | 50.8206% |
+| coverage.py combined coverage | 70.9654% | 71.2163% |
+| Full Python SDK suite passed | 1,549 | 1,583 |
+| Full Python SDK suite failed | 2 | 2 |
+| Full Python SDK suite skipped | 16 | 16 |
+
+Both failures are the pre-existing headless Viewer lifecycle cases `test_viewer_dies_on_client_close` and `test_viewer_can_restart_on_same_port`.
+The Viewer panics loading `Global.Typography.Body`; process teardown also reports permission errors.
+These occur in the matched baseline before any assignment changes.
+The full unit suite is green with 1,031 passed and 4 skipped; the full broader SDK suite is not green.
+A matching, working Viewer and process-control permissions are needed to finish verifying those lifecycle integrations.
+Do not claim that the assignment repaired them or that CI passed.
+
+Final coverage command (use `before` instead of `after` for the original parser and exclude both new test files):
+
+```sh
+PATH="$PWD/.venv/bin:$PATH" .venv/bin/python -m coverage run --branch --source=rerun_py/rerun_sdk/rerun --data-file=/tmp/a12-matched-after.coverage -m pytest rerun_py/tests
+.venv/bin/python -m coverage report --data-file=/tmp/a12-matched-after.coverage
+.venv/bin/python -m coverage json --data-file=/tmp/a12-matched-after.coverage -o docs/assignment-12/matched-after-coverage.json
+```
+
+The initial `before-*` reports preserve the inherited sandbox baseline.
+The plain `after-*` reports record a sandbox run while fixtures were being restored and are diagnostic rather than the primary comparison.
+`verified-full-tests.txt` records an additional run with one Viewer failure; the stable matched comparison reports both lifecycle failures on both sides.
+This variation is another reason not to infer correctness from a coverage percentage.
+Coverage excludes native Rust/C++ code and subprocess execution.
+
+The tests have not changed since the Red commit.
+Green initializes the fallback before environment parsing; Refactor flattens the parser into early returns and documents that initialization order.
+Ruff lint and format checks pass for all three changed Python files, `pixi run rs-fmt` succeeds, and `git diff --check` passes.
+No Rust source changes were needed.
+
+Review `A7-Automated-Testing.md` for the wiki text, `AI-Use-Log.md` for the AI disclosure, and `Demo.md` for the two-minute walkthrough.
+The wiki's AI assessment and component-risk judgment need the student's review.
+The branch and wiki are prepared locally for review; publishing, the in-class demo, and OAKS submission remain.
