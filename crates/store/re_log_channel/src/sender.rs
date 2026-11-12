@@ -152,3 +152,76 @@ impl LogSender {
         self.tx.len()
     }
 }
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod tests {
+    use std::time::Duration;
+
+    use crate::{DataSourceMessage, FlushError, LogSource, SmartMessagePayload, log_channel};
+
+    #[test]
+    fn flush_when_acknowledged_delivers_prior_data_before_returning() {
+        let (sender, receiver) = log_channel(LogSource::Sdk);
+        let store_id = re_log_types::StoreId::empty_recording();
+        sender
+            .send(DataSourceMessage::RrdManifestComplete(store_id.clone()))
+            .unwrap();
+
+        std::thread::scope(|scope| {
+            let consumer = scope.spawn(|| {
+                let data = receiver.recv_timeout(Duration::from_secs(5)).unwrap();
+                assert!(matches!(
+                    data.payload,
+                    SmartMessagePayload::Msg(DataSourceMessage::RrdManifestComplete(id)) if id == store_id
+                ));
+                let flush = receiver.recv_timeout(Duration::from_secs(5)).unwrap();
+                let SmartMessagePayload::Flush { on_flush_done } = flush.payload else {
+                    panic!("expected a flush after the data");
+                };
+                on_flush_done();
+            });
+            sender.flush_blocking(Duration::from_secs(5)).unwrap();
+            consumer.join().unwrap();
+        });
+        assert!(receiver.is_empty());
+    }
+
+    #[test]
+    fn flush_when_zero_timeout_and_no_ack_returns_timeout_but_queues_marker() {
+        let (sender, receiver) = log_channel(LogSource::Sdk);
+        assert!(matches!(
+            sender.flush_blocking(Duration::ZERO),
+            Err(FlushError::Timeout)
+        ));
+        let marker = receiver.try_recv().unwrap();
+        assert!(matches!(marker.payload, SmartMessagePayload::Flush { .. }));
+        assert!(receiver.is_empty());
+    }
+
+    #[test]
+    fn flush_when_receiver_is_gone_returns_closed() {
+        let (sender, receiver) = log_channel(LogSource::Sdk);
+        drop(receiver);
+        assert!(matches!(
+            sender.flush_blocking(Duration::from_secs(5)),
+            Err(FlushError::Closed)
+        ));
+    }
+
+    #[test]
+    fn flush_when_callback_is_dropped_without_ack_returns_closed() {
+        let (sender, receiver) = log_channel(LogSource::Sdk);
+        std::thread::scope(|scope| {
+            let consumer = scope.spawn(|| {
+                let marker = receiver.recv_timeout(Duration::from_secs(5)).unwrap();
+                assert!(matches!(marker.payload, SmartMessagePayload::Flush { .. }));
+                drop(marker);
+            });
+            assert!(matches!(
+                sender.flush_blocking(Duration::from_secs(5)),
+                Err(FlushError::Closed)
+            ));
+            consumer.join().unwrap();
+        });
+    }
+}

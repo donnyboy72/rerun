@@ -215,6 +215,111 @@ impl re_byte_size::MemUsageTreeCapture for LogReceiverSet {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::{
+        DataSourceMessage, LogReceiverSet, LogSource, RecordingOpenBehavior, TrySendError,
+        log_channel,
+    };
+
+    #[test]
+    fn remove_by_uri_when_network_source_matches_disconnects_it_and_preserves_others() {
+        let sources = [
+            LogSource::HttpStream {
+                url: "https://example.com/data.rrd".into(),
+            },
+            LogSource::MessageProxy("rerun+http://localhost:9876/proxy".parse().unwrap()),
+            LogSource::RedapGrpcStream {
+                uri: "rerun+http://localhost:51234/dataset/1830B33B45B963E7774455beb91701ae/data"
+                    .parse()
+                    .unwrap(),
+                open_behavior: RecordingOpenBehavior::OpenAndSelect,
+            },
+        ];
+        for source in sources {
+            let needle = match &source {
+                LogSource::HttpStream { url } => url.clone(),
+                LogSource::MessageProxy(uri) => uri.to_string(),
+                LogSource::RedapGrpcStream { uri, .. } => uri.to_string(),
+                _ => unreachable!(),
+            };
+            let (sender, receiver) = log_channel(source);
+            let (other_sender, other_receiver) = log_channel(LogSource::Sdk);
+            let set = LogReceiverSet::new(vec![receiver, other_receiver]);
+            set.remove_by_uri(&needle);
+            assert_eq!(set.sources(), vec![std::sync::Arc::new(LogSource::Sdk)]);
+            assert!(matches!(
+                sender.try_send(DataSourceMessage::RrdManifestComplete(
+                    re_log_types::StoreId::empty_recording()
+                )),
+                Err(TrySendError::Disconnected(_))
+            ));
+            other_sender
+                .send(DataSourceMessage::RrdManifestComplete(
+                    re_log_types::StoreId::empty_recording(),
+                ))
+                .unwrap();
+            assert_eq!(*set.try_recv().unwrap().0, LogSource::Sdk);
+        }
+    }
+
+    #[test]
+    fn remove_by_uri_when_empty_or_unknown_does_not_remove_existing_source() {
+        let set = LogReceiverSet::default();
+        set.remove_by_uri("");
+        assert!(set.is_empty());
+        let source = LogSource::HttpStream {
+            url: "https://example.com/data.rrd?token=one".into(),
+        };
+        let (_sender, receiver) = log_channel(source.clone());
+        set.add(receiver);
+        for needle in ["", "not a URI", "https://example.com/data.rrd?token=two"] {
+            set.remove_by_uri(needle);
+            assert_eq!(set.sources(), vec![std::sync::Arc::new(source.clone())]);
+        }
+    }
+
+    #[test]
+    fn remove_by_uri_when_local_or_js_source_looks_like_uri_preserves_it() {
+        let needle = "https://example.com/data.rrd";
+        let sources = [
+            LogSource::File {
+                path: needle.into(),
+            },
+            LogSource::JsChannel {
+                channel_name: needle.into(),
+            },
+            LogSource::Stdin,
+            LogSource::RrdWebEvent,
+        ];
+        let channels: Vec<_> = sources.iter().cloned().map(log_channel).collect();
+        let (senders, receivers): (Vec<_>, Vec<_>) = channels.into_iter().unzip();
+        let set = LogReceiverSet::new(receivers);
+        set.remove_by_uri(needle);
+        assert_eq!(set.sources(), sources.map(std::sync::Arc::new).to_vec());
+        assert_eq!(senders.len(), set.sources().len());
+    }
+
+    #[test]
+    fn remove_by_uri_when_multiple_receivers_match_disconnects_all_matches() {
+        let needle = "https://example.com/data.rrd";
+        let source = LogSource::HttpStream { url: needle.into() };
+        let (first_sender, first_receiver) = log_channel(source.clone());
+        let (second_sender, second_receiver) = log_channel(source);
+        let set = LogReceiverSet::new(vec![first_receiver, second_receiver]);
+        set.remove_by_uri(needle);
+        assert!(set.is_empty());
+        for sender in [first_sender, second_sender] {
+            assert!(matches!(
+                sender.try_send(DataSourceMessage::RrdManifestComplete(
+                    re_log_types::StoreId::empty_recording()
+                )),
+                Err(TrySendError::Disconnected(_))
+            ));
+        }
+    }
+}
+
 #[test]
 fn test_receive_set() {
     use re_log_types::StoreId;

@@ -1,0 +1,35 @@
+   Compiling re_workspace_hack v0.0.0 (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_workspace_hack)
+   Compiling re_log v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_log)
+   Compiling re_tracing v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_tracing)
+   Compiling re_span v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_span)
+   Compiling re_int v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_int)
+   Compiling re_case v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_case)
+   Compiling re_error v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_error)
+   Compiling re_byte_size_derive v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_byte_size_derive)
+   Compiling re_format v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_format)
+   Compiling re_byte_size v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_byte_size)
+   Compiling re_tuid v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_tuid)
+   Compiling re_string_interner v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_string_interner)
+   Compiling re_build_info v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_build_info)
+   Compiling re_quota_channel v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_quota_channel)
+   Compiling re_arrow_util v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_arrow_util)
+   Compiling re_grpc_headers v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/utils/re_grpc_headers)
+   Compiling re_types_core v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_types_core)
+   Compiling re_log_types v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_log_types)
+   Compiling re_sorbet v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_sorbet)
+   Compiling re_uri v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_uri)
+   Compiling re_log_msg v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_log_msg)
+   Compiling re_chunk v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_chunk)
+   Compiling re_chunk_index v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_chunk_index)
+   Compiling re_protos v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_protos)
+   Compiling re_log_channel v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_log_channel)
+    Finished `test` profile [optimized] target(s) in 10.25s
+────────────
+ Nextest run ID c2a15b76-94f6-4c36-a490-fb94e07579c5 with nextest profile: default
+    Starting 4 tests across 1 binary
+        PASS [   0.013s] (1/4) re_log_channel tests::url_display_name_keeps_long_real_urls
+        PASS [   0.013s] (2/4) re_log_channel tests::url_display_name_keeps_short_urls
+        PASS [   0.014s] (3/4) re_log_channel tests::url_display_name_truncates_long_data_url
+        PASS [   0.434s] (4/4) re_log_channel receiver_set::test_receive_set
+────────────
+     Summary [   0.438s] 4 tests run: 4 passed, 0 skipped

@@ -1,15 +1,16 @@
 # Two minute demo
 
 Use GitHub's commit views and the wiki once the reviewed branch and page are published.
-The commit hashes are listed in `Submission.md`.
+Use the commit links in the published wiki; the original four commits are preserved and a supplemental A7-Tests commit adds the revised Rust characterization.
 
 1. **0:00–0:35:** Open the A7-Red commit and `docs/assignment-12/red-tests.txt`.
    Show the failing `NameError` and explain why a fresh interpreter matters: calling the parser after import already has a fallback value.
 2. **0:35–1:00:** Open A7-Green.
    Show the single `_strict_mode = False` initialization and `green-unit-tests.txt`: 1,031 passed, 4 skipped.
    Explain that invalid input now emits its existing diagnostic and defaults to false during startup.
-3. **1:00–1:25:** Show `test_script_setup_when_connection_fails_propagates_error_without_spawning` in `test_logging_boundaries.py`.
-   Explain that real argument parsing is retained while recording operations are replaced to avoid network, files, or GUI effects.
+3. **1:00–1:25:** Show `recv_timeout_when_empty_with_live_sender_keeps_connection` in `crates/store/re_log_channel/src/receiver.rs`.
+   Explain that a zero-timeout poll must preserve a live connection, whereas sender disconnection updates the receiver state.
+   These Rust tests use real channels and the maintainer's preferred same-file test module.
 4. **1:25–1:45:** Show A7-Refactor and explain the early returns.
    The tests have not changed since Red.
 5. **1:45–2:00:** Show the wiki's Testing Evolution and AI sections.

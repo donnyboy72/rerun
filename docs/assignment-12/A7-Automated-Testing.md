@@ -1,16 +1,17 @@
 # A7: Automated Testing
 
-Testing Rerun's Python SDK showed a useful separation between Arrow data conversion and operations that start viewers, choose recordings, or read process-wide configuration.
+Testing Rerun's native ingestion channels and Python SDK showed a useful separation between data conversion, delivery guarantees, and operations that start viewers or read process-wide configuration.
 The latter boundaries needed explicit isolation even when their functions were short.
-This assignment adds 31 characterization cases and three fresh-process regression cases, without adding features.
+This assignment adds 43 characterization cases and three fresh-process regression cases, without adding features.
 
 ## What testing revealed
 
-Three previously untested behavioral targets were characterized: `LoggingHandler`, `script_setup`, and `default_strict_mode`.
-The handler tests assert formatted message text, entity path, severity, empty/custom-level behavior, and formatting failures.
-Startup tests cover all sink routes, headless/default operation, conflicting flags, and a connection error that must propagate without launching a fallback viewer.
-Configuration tests cover valid values, absent settings, and invalid values that retain an already initialized mode.
-Five additional column-validation cases assert Arrow values and mismatch diagnostics; those are not counted as a previously untested component because existing tests already exercised that code indirectly.
+After a repository-wide audit, the three primary Part 2 targets are Rust functions: `LogSender::flush_blocking`, `LogReceiver::recv_timeout`, and `LogReceiverSet::remove_by_uri`.
+Twelve same-file tests characterize acknowledgments, timeout and connection state, exact URI matching, and disconnection without changing production behavior.
+The affected crate's complete suite passes: **16 passed, 0 skipped**, up from four existing tests.
+The [codebase audit](Part2-Codebase-Audit.md) records the Rust, C++, Python/notebook, and JavaScript/browser areas reviewed, existing tests found, rejected candidates, and normal/boundary/failure cases.
+The earlier Python handler, startup, configuration, and column-validation tests remain additional work.
+The findings below describe the Python defect work; the audit contains the native channel testability findings.
 
 `LoggingHandler.emit` imports its logging destination internally, coupling conversion to the SDK's recording machinery.
 This weakens **Low Coupling** and **Protected Variations**: tests patch the destination, while retaining real `LogRecord` and `TextLog` objects.
@@ -63,6 +64,7 @@ The entire multi-language workspace was not run.
 ## AI assessment and the riskiest component to change
 
 Codex helped identify initialization order as the reason fresh-process tests were necessary and preserved separate failing and passing commits.
+It initially limited target selection to the ready-to-run Python SDK; the student corrected that scope, leading to the repository-wide audit and three native Rust targets.
 It initially mistook the lack of directly named tests for a gap in `build_column_args`; coverage showed existing indirect exercise, so that target was replaced rather than counted toward the three.
 It also initially invoked tests under socket restrictions and with an older system Viewer, producing misleading environment failures.
 The AI Use Log records those corrections.

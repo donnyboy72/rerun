@@ -1,0 +1,23 @@
+   Compiling re_log_channel v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_log_channel)
+    Finished `test` profile [optimized] target(s) in 1.46s
+────────────
+ Nextest run ID 9b1ebfc5-26f6-4540-a382-6ea9d2f7384a with nextest profile: default
+    Starting 16 tests across 1 binary
+        PASS [   0.008s] ( 1/16) re_log_channel receiver_set::tests::remove_by_uri_when_multiple_receivers_match_disconnects_all_matches
+        PASS [   0.009s] ( 2/16) re_log_channel receiver_set::tests::remove_by_uri_when_network_source_matches_disconnects_it_and_preserves_others
+        PASS [   0.009s] ( 3/16) re_log_channel receiver::tests::recv_timeout_when_data_is_queued_preserves_source_and_payload
+        PASS [   0.009s] ( 4/16) re_log_channel sender::tests::flush_when_acknowledged_delivers_prior_data_before_returning
+        PASS [   0.010s] ( 5/16) re_log_channel receiver_set::tests::remove_by_uri_when_local_or_js_source_looks_like_uri_preserves_it
+        PASS [   0.010s] ( 6/16) re_log_channel receiver::tests::recv_timeout_when_sender_drops_drains_queued_data_before_disconnect
+        PASS [   0.010s] ( 7/16) re_log_channel receiver::tests::recv_timeout_when_sender_is_gone_marks_disconnected
+        PASS [   0.010s] ( 8/16) re_log_channel receiver_set::tests::remove_by_uri_when_empty_or_unknown_does_not_remove_existing_source
+        PASS [   0.012s] ( 9/16) re_log_channel receiver::tests::recv_timeout_when_empty_with_live_sender_keeps_connection
+        PASS [   0.008s] (10/16) re_log_channel sender::tests::flush_when_receiver_is_gone_returns_closed
+        PASS [   0.009s] (11/16) re_log_channel sender::tests::flush_when_callback_is_dropped_without_ack_returns_closed
+        PASS [   0.007s] (12/16) re_log_channel tests::url_display_name_keeps_short_urls
+        PASS [   0.007s] (13/16) re_log_channel tests::url_display_name_truncates_long_data_url
+        PASS [   0.008s] (14/16) re_log_channel tests::url_display_name_keeps_long_real_urls
+        PASS [   0.009s] (15/16) re_log_channel sender::tests::flush_when_zero_timeout_and_no_ack_returns_timeout_but_queues_marker
+        PASS [   0.426s] (16/16) re_log_channel receiver_set::test_receive_set
+────────────
+     Summary [   0.427s] 16 tests run: 16 passed, 0 skipped

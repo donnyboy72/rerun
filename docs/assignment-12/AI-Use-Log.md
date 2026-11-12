@@ -32,3 +32,17 @@ The raw failing runs remain available so these limitations are visible.
 The student should read the tests and smallest fix, run the demonstration, and revise the wiki's personal assessment to reflect their own judgment.
 The assistant's interpretation is not evidence that the student has independently reviewed the code.
 The student must perform the in-class demo and submit links on OAKS.
+
+## Follow-up codebase-wide Part 2 review
+
+The student pointed out that Python-only selection did not consider the whole project and supplied maintainer guidance about same-file Rust tests or crate integration tests.
+Codex inspected native storage/indexing, SDK/ingestion, Viewer/blueprint, utility/build code, C++ Catch2 tests, Python/notebook tests, and JavaScript/browser integration locations.
+It rejected manifest merging and in-memory provider loading as untested targets after finding existing integration exercise.
+It replaced the primary Part 2 selection with three Rust log-channel functions and added twelve tests inside their production files under test-only modules.
+The original Python tests and defect fix remain additional work.
+
+Verification: the affected crate's baseline had four passing tests; the final complete nextest run has sixteen passing tests with all features and no skips.
+Clippy with all targets and features, the repository Rust formatter, and diff whitespace checks pass.
+Only test modules were added to production source files; no runtime behavior or dependencies changed.
+The audit is a repository-wide static search and focused candidate review, not proof of coverage for every function.
+No new whole-project coverage percentage or passing entire-workspace result is claimed.

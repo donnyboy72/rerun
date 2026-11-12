@@ -87,3 +87,17 @@ No Rust source changes were needed.
 Review `A7-Automated-Testing.md` for the wiki text, `AI-Use-Log.md` for the AI disclosure, and `Demo.md` for the two-minute walkthrough.
 The wiki's AI assessment and component-risk judgment need the student's review.
 The branch and wiki are prepared locally for review; publishing, the in-class demo, and OAKS submission remain.
+
+## Part 2 revision after codebase-wide review
+
+The authoritative Part 2 selection is now documented in [Part2-Codebase-Audit.md](Part2-Codebase-Audit.md).
+The audit spans native Rust storage, SDK, Viewer, ingestion, utilities and code generation, the C++ SDK, Python/notebook packages, and JavaScript/TypeScript/browser code.
+The three primary targets are `LogSender::flush_blocking`, `LogReceiver::recv_timeout`, and `LogReceiverSet::remove_by_uri`.
+Twelve new same-file Rust characterization cases cover normal, boundary, and failure behavior.
+The complete `re_log_channel` suite passes **16 tests**, compared with **4** before the additions.
+The Python targets described earlier in this README are retained as additional historical work rather than the final three Part 2 selections.
+
+The original four A7 commits remain intact; a supplemental A7-Tests commit adds the Rust characterization and audit.
+The Python Red/Green/Refactor evidence is unchanged.
+The earlier coverage percentages remain explicitly Python-only; no Rust or whole-project percentage is inferred from the additional test count.
+The full multi-language workspace was not rerun.

@@ -120,3 +120,68 @@ impl LogReceiver {
         self.rx.len()
     }
 }
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod tests {
+    use std::time::Duration;
+
+    use crate::{DataSourceMessage, LogSource, RecvTimeoutError, SmartMessagePayload, log_channel};
+
+    #[test]
+    fn recv_timeout_when_data_is_queued_preserves_source_and_payload() {
+        let source = LogSource::File {
+            path: "recording.rrd".into(),
+        };
+        let (sender, receiver) = log_channel(source.clone());
+        let store_id = re_log_types::StoreId::empty_recording();
+        sender
+            .send(DataSourceMessage::RrdManifestComplete(store_id.clone()))
+            .unwrap();
+        let message = receiver.recv_timeout(Duration::ZERO).unwrap();
+        assert_eq!(*message.source, source);
+        assert!(matches!(message.payload,
+            SmartMessagePayload::Msg(DataSourceMessage::RrdManifestComplete(id)) if id == store_id));
+        assert!(receiver.is_connected());
+        assert!(receiver.is_empty());
+    }
+
+    #[test]
+    fn recv_timeout_when_empty_with_live_sender_keeps_connection() {
+        let (_sender, receiver) = log_channel(LogSource::Sdk);
+        assert!(matches!(
+            receiver.recv_timeout(Duration::ZERO),
+            Err(RecvTimeoutError::Timeout)
+        ));
+        assert!(receiver.is_connected());
+    }
+
+    #[test]
+    fn recv_timeout_when_sender_is_gone_marks_disconnected() {
+        let (sender, receiver) = log_channel(LogSource::Sdk);
+        drop(sender);
+        assert!(receiver.is_connected());
+        assert!(matches!(
+            receiver.recv_timeout(Duration::ZERO),
+            Err(RecvTimeoutError::Disconnected)
+        ));
+        assert!(!receiver.is_connected());
+    }
+
+    #[test]
+    fn recv_timeout_when_sender_drops_drains_queued_data_before_disconnect() {
+        let (sender, receiver) = log_channel(LogSource::Sdk);
+        sender
+            .send(DataSourceMessage::RrdManifestComplete(
+                re_log_types::StoreId::empty_recording(),
+            ))
+            .unwrap();
+        drop(sender);
+        assert!(receiver.recv_timeout(Duration::ZERO).is_ok());
+        assert!(receiver.is_connected());
+        assert!(matches!(
+            receiver.recv_timeout(Duration::ZERO),
+            Err(RecvTimeoutError::Disconnected)
+        ));
+        assert!(!receiver.is_connected());
+    }
+}
