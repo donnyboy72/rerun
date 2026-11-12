@@ -1,0 +1,202 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0 -- /Users/donavan/swe/fall2026/csci360/rerun/.venv/bin/python
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/donavan/swe/fall2026/csci360/rerun/rerun_py
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, anyio-4.14.2, inline-snapshot-0.31.1, syrupy-5.0.0
+collecting ... collected 18 items / 15 deselected / 3 selected
+
+rerun_py/tests/unit/test_strict_mode_environment.py::test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[invalid] FAILED [ 33%]
+rerun_py/tests/unit/test_strict_mode_environment.py::test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[] FAILED [ 66%]
+rerun_py/tests/unit/test_strict_mode_environment.py::test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[ true ] FAILED [100%]
+
+=================================== FAILURES ===================================
+_ test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[invalid] _
+
+value = 'invalid'
+
+    @pytest.mark.parametrize("value", ["invalid", "", " true "])
+    def test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false(value: str) -> None:
+        # A fresh process is essential: the current interpreter already initialized _strict_mode.
+        result = subprocess.run(
+            [sys.executable, "-c", "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"],
+            env={**os.environ, "RERUN_STRICT": value},
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>
+E             from . import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>
+E             from ..encodings import (  # Re-export time range types for better discoverability.
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>
+E             from .absolute_time_range import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>
+E             from .._baseclasses import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>
+E             from .error_utils import catch_and_log_exceptions
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>
+E             _strict_mode = default_strict_mode()
+E                            ^^^^^^^^^^^^^^^^^^^^^
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode
+E             return _strict_mode
+E                    ^^^^^^^^^^^^
+E         NameError: name '_strict_mode' is not defined
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/donavan/swe/fall2026/csci360/rerun/.venv/bin/python', '-c', "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"], returncode=1, stdout='Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found invalid\n', stderr='Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>\n    from . import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>\n    from ..encodings import (  # Re-export time range types for better discoverability.\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>\n    from .absolute_time_range import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>\n    from .._baseclasses import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>\n    from .error_utils import catch_and_log_exceptions\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>\n    _strict_mode = default_strict_mode()\n                   ^^^^^^^^^^^^^^^^^^^^^\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode\n    return _strict_mode\n           ^^^^^^^^^^^^\nNameError: name \'_strict_mode\' is not defined\n').returncode
+
+rerun_py/tests/unit/test_strict_mode_environment.py:51: AssertionError
+_ test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[] _
+
+value = ''
+
+    @pytest.mark.parametrize("value", ["invalid", "", " true "])
+    def test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false(value: str) -> None:
+        # A fresh process is essential: the current interpreter already initialized _strict_mode.
+        result = subprocess.run(
+            [sys.executable, "-c", "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"],
+            env={**os.environ, "RERUN_STRICT": value},
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>
+E             from . import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>
+E             from ..encodings import (  # Re-export time range types for better discoverability.
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>
+E             from .absolute_time_range import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>
+E             from .._baseclasses import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>
+E             from .error_utils import catch_and_log_exceptions
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>
+E             _strict_mode = default_strict_mode()
+E                            ^^^^^^^^^^^^^^^^^^^^^
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode
+E             return _strict_mode
+E                    ^^^^^^^^^^^^
+E         NameError: name '_strict_mode' is not defined
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/donavan/swe/fall2026/csci360/rerun/.venv/bin/python', '-c', "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"], returncode=1, stdout='Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found \n', stderr='Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>\n    from . import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>\n    from ..encodings import (  # Re-export time range types for better discoverability.\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>\n    from .absolute_time_range import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>\n    from .._baseclasses import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>\n    from .error_utils import catch_and_log_exceptions\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>\n    _strict_mode = default_strict_mode()\n                   ^^^^^^^^^^^^^^^^^^^^^\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode\n    return _strict_mode\n           ^^^^^^^^^^^^\nNameError: name \'_strict_mode\' is not defined\n').returncode
+
+rerun_py/tests/unit/test_strict_mode_environment.py:51: AssertionError
+_ test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[ true ] _
+
+value = ' true '
+
+    @pytest.mark.parametrize("value", ["invalid", "", " true "])
+    def test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false(value: str) -> None:
+        # A fresh process is essential: the current interpreter already initialized _strict_mode.
+        result = subprocess.run(
+            [sys.executable, "-c", "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"],
+            env={**os.environ, "RERUN_STRICT": value},
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>
+E             from . import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>
+E             from ..encodings import (  # Re-export time range types for better discoverability.
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>
+E             from .absolute_time_range import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>
+E             from .._baseclasses import (
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>
+E             from .error_utils import catch_and_log_exceptions
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>
+E             _strict_mode = default_strict_mode()
+E                            ^^^^^^^^^^^^^^^^^^^^^
+E           File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode
+E             return _strict_mode
+E                    ^^^^^^^^^^^^
+E         NameError: name '_strict_mode' is not defined
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/donavan/swe/fall2026/csci360/rerun/.venv/bin/python', '-c', "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"], returncode=1, stdout='Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found  true \n', stderr='Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>\n    from . import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>\n    from ..encodings import (  # Re-export time range types for better discoverability.\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>\n    from .absolute_time_range import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>\n    from .._baseclasses import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>\n    from .error_utils import catch_and_log_exceptions\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>\n    _strict_mode = default_strict_mode()\n                   ^^^^^^^^^^^^^^^^^^^^^\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode\n    return _strict_mode\n           ^^^^^^^^^^^^\nNameError: name \'_strict_mode\' is not defined\n').returncode
+
+rerun_py/tests/unit/test_strict_mode_environment.py:51: AssertionError
+=========================== short test summary info ============================
+FAILED rerun_py/tests/unit/test_strict_mode_environment.py::test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[invalid] - AssertionError: Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>
+      from . import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>
+      from ..encodings import (  # Re-export time range types for better discoverability.
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>
+      from .absolute_time_range import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>
+      from .._baseclasses import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>
+      from .error_utils import catch_and_log_exceptions
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>
+      _strict_mode = default_strict_mode()
+                     ^^^^^^^^^^^^^^^^^^^^^
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode
+      return _strict_mode
+             ^^^^^^^^^^^^
+  NameError: name '_strict_mode' is not defined
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/Users/donavan/swe/fall2026/csci360/rerun/.venv/bin/python', '-c', "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"], returncode=1, stdout='Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found invalid\n', stderr='Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>\n    from . import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>\n    from ..encodings import (  # Re-export time range types for better discoverability.\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>\n    from .absolute_time_range import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>\n    from .._baseclasses import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>\n    from .error_utils import catch_and_log_exceptions\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>\n    _strict_mode = default_strict_mode()\n                   ^^^^^^^^^^^^^^^^^^^^^\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode\n    return _strict_mode\n           ^^^^^^^^^^^^\nNameError: name \'_strict_mode\' is not defined\n').returncode
+FAILED rerun_py/tests/unit/test_strict_mode_environment.py::test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[] - AssertionError: Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>
+      from . import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>
+      from ..encodings import (  # Re-export time range types for better discoverability.
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>
+      from .absolute_time_range import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>
+      from .._baseclasses import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>
+      from .error_utils import catch_and_log_exceptions
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>
+      _strict_mode = default_strict_mode()
+                     ^^^^^^^^^^^^^^^^^^^^^
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode
+      return _strict_mode
+             ^^^^^^^^^^^^
+  NameError: name '_strict_mode' is not defined
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/Users/donavan/swe/fall2026/csci360/rerun/.venv/bin/python', '-c', "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"], returncode=1, stdout='Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found \n', stderr='Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>\n    from . import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>\n    from ..encodings import (  # Re-export time range types for better discoverability.\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>\n    from .absolute_time_range import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>\n    from .._baseclasses import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>\n    from .error_utils import catch_and_log_exceptions\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>\n    _strict_mode = default_strict_mode()\n                   ^^^^^^^^^^^^^^^^^^^^^\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode\n    return _strict_mode\n           ^^^^^^^^^^^^\nNameError: name \'_strict_mode\' is not defined\n').returncode
+FAILED rerun_py/tests/unit/test_strict_mode_environment.py::test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false[ true ] - AssertionError: Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>
+      from . import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>
+      from ..encodings import (  # Re-export time range types for better discoverability.
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>
+      from .absolute_time_range import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>
+      from .._baseclasses import (
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>
+      from .error_utils import catch_and_log_exceptions
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>
+      _strict_mode = default_strict_mode()
+                     ^^^^^^^^^^^^^^^^^^^^^
+    File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode
+      return _strict_mode
+             ^^^^^^^^^^^^
+  NameError: name '_strict_mode' is not defined
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['/Users/donavan/swe/fall2026/csci360/rerun/.venv/bin/python', '-c', "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"], returncode=1, stdout='Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found  true \n', stderr='Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/__init__.py", line 26, in <module>\n    from . import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/blueprint/__init__.py", line 7, in <module>\n    from ..encodings import (  # Re-export time range types for better discoverability.\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/__init__.py", line 5, in <module>\n    from .absolute_time_range import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/encodings/absolute_time_range.py", line 14, in <module>\n    from .._baseclasses import (\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/_baseclasses.py", line 14, in <module>\n    from .error_utils import catch_and_log_exceptions\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 35, in <module>\n    _strict_mode = default_strict_mode()\n                   ^^^^^^^^^^^^^^^^^^^^^\n  File "/Users/donavan/swe/fall2026/csci360/rerun/rerun_py/rerun_sdk/rerun/error_utils.py", line 28, in default_strict_mode\n    return _strict_mode\n           ^^^^^^^^^^^^\nNameError: name \'_strict_mode\' is not defined\n').returncode
+======================= 3 failed, 15 deselected in 0.47s =======================

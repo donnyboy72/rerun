@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
+
 import pytest
 from rerun import error_utils
 
@@ -31,3 +35,21 @@ def test_default_strict_mode_when_invalid_reports_value_and_keeps_current_mode(
     assert capsys.readouterr().out == (
         f"Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found {value.lower()}\n"
     )
+
+
+@pytest.mark.parametrize("value", ["invalid", "", " true "])
+def test_import_when_strict_environment_is_invalid_reports_value_and_defaults_false(value: str) -> None:
+    # A fresh process is essential: the current interpreter already initialized _strict_mode.
+    result = subprocess.run(
+        [sys.executable, "-c", "import rerun; print('strict_mode=' + str(rerun.strict_mode()))"],
+        env={**os.environ, "RERUN_STRICT": value},
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [
+        f"Expected RERUN_STRICT to be one of 0/1 false/true off/on no/yes, found {value}",
+        "strict_mode=False",
+    ]
