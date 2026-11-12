@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 _TFunc = TypeVar("_TFunc", bound=Callable[..., Any])
 
+_strict_mode = False
+
 
 def default_strict_mode() -> bool:
     if "RERUN_STRICT" in os.environ:
