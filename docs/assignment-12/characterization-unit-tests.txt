@@ -1,0 +1,1934 @@
+........................................................................ [  7%]
+........................................................................ [ 14%]
+........................................................................ [ 21%]
+........................................................................ [ 28%]
+........................................................................ [ 35%]
+........................................................................ [ 42%]
+..............................................................s......... [ 49%]
+......................................................................F. [ 56%]
+................................................ss............s......... [ 63%]
+...............................................................F........ [ 70%]
+.....FFFFFFFFFF...FF.................................................... [ 77%]
+.............................................................FFFFFFFFFFF [ 84%]
+........................................................................ [ 92%]
+........................................................................ [ 99%]
+.........                                                                [100%]
+=================================== FAILURES ===================================
+____________________________ test_isolated_streams _____________________________
+
+tmp_path = PosixPath('/private/var/folders/w1/lcyyyzy55n7398p_mz05cm_80000gn/T/pytest-of-donavan/pytest-11/test_isolated_streams0')
+
+    def test_isolated_streams(tmp_path: Path) -> None:
+        rec1_path = f"{tmp_path}/rec1.rrd"
+        rec2_path = f"{tmp_path}/rec2.rrd"
+    
+        rec1 = rr.RecordingStream("rerun_example_multi_stream", recording_id="rec1")
+        rec1.log("/data1", rr.TextLog("Data1"))
+        rec1.save(rec1_path)
+    
+        rec2 = rr.RecordingStream("rerun_example_multi_stream", recording_id="rec2")
+        rec2.log("/data2", rr.TextLog("Data2"))
+        rec2.save(rec2_path)
+    
+>       server = rr.server.Server(datasets={"test_dataset": tmp_path})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_multi_stream.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1400baa10>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+________________________ test_send_dataframe_roundtrip _________________________
+
+tmp_path = PosixPath('/private/var/folders/w1/lcyyyzy55n7398p_mz05cm_80000gn/T/pytest-of-donavan/pytest-11/test_send_dataframe_roundtrip0')
+snapshot = SnapshotAssertion(name='snapshot', num_executions=0)
+
+    def test_send_dataframe_roundtrip(tmp_path: Path, snapshot: SnapshotAssertion) -> None:
+        """Test that send_dataframe can roundtrip data through Server + Catalog API."""
+        original_dir = tmp_path / "original"
+        original_dir.mkdir()
+        rrd_path = original_dir / "recording.rrd"
+    
+        # Create initial recording with some data
+        with rr.RecordingStream(APP_ID, recording_id=uuid.uuid4()) as rec:
+            rec.save(str(rrd_path))
+            rec.set_time("my_index", sequence=1)
+            rec.log("points", rr.Points3D([[1, 2, 3], [4, 5, 6], [7, 8, 9]], radii=[0.5]))
+            rec.set_time("my_index", sequence=7)
+            rec.log("points", rr.Points3D([[10, 11, 12]], colors=[[255, 0, 0]]))
+    
+        # Load via Server + Catalog API and read as Arrow table
+>       with rr.server.Server(datasets={"test_dataset": original_dir}) as server:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_send_dataframe.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1400baa10>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+_________________________ test_server_starts_and_stops _________________________
+
+    def test_server_starts_and_stops() -> None:
+        """Test that a server can be started and stopped."""
+>       server = Server()
+                 ^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x142986550>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+_________________________ test_server_context_manager __________________________
+
+    def test_server_context_manager() -> None:
+        """Test that the server works as a context manager."""
+>       with Server() as server:
+             ^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429e46d0>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+___________________________ test_server_custom_port ____________________________
+
+    def test_server_custom_port() -> None:
+        """Test that the server can be started on a custom port."""
+>       with Server(port=19876) as server:
+             ^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x142986350>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:19876: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+___________________________ test_server_random_port ____________________________
+
+    def test_server_random_port() -> None:
+        """Test that the server selects a random port when none is specified."""
+>       with Server() as server1, Server() as server2:
+             ^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429c4cd0>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+__________________________ test_server_ephemeral_port __________________________
+
+    def test_server_ephemeral_port() -> None:
+        """Regression test: `port=0` must report the OS-assigned port, not `:0`."""
+>       with Server(host="127.0.0.1", port=0) as server:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429fa250>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 127.0.0.1:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+______________________ test_server_shutdown_twice_raises _______________________
+
+    def test_server_shutdown_twice_raises() -> None:
+        """Test that shutting down a server twice raises an error."""
+>       server = Server()
+                 ^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429df490>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+___________________ test_server_client_after_shutdown_raises ___________________
+
+    def test_server_client_after_shutdown_raises() -> None:
+        """Test that getting a client after shutdown raises an error."""
+>       server = Server()
+                 ^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429f8490>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+_______________________ test_server_with_dataset_prefix ________________________
+
+    def test_server_with_dataset_prefix() -> None:
+        """Test that the server can be started with a dataset prefix (directory)."""
+>       with Server(datasets={"test_dataset": DATASET_DIR}) as server:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x142987b90>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+________________________ test_server_with_dataset_files ________________________
+
+    def test_server_with_dataset_files() -> None:
+        """Test that the server can be started with explicit dataset files."""
+        rrd_files = list(DATASET_DIR.glob("*.rrd"))[:3]
+        assert len(rrd_files) == 3
+    
+>       with Server(datasets={"my_dataset": rrd_files}) as server:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429fc3d0>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+______________________ test_server_with_multiple_datasets ______________________
+
+    def test_server_with_multiple_datasets() -> None:
+        """Test that the server can be started with multiple datasets."""
+        rrd_files = list(DATASET_DIR.glob("*.rrd"))[:2]
+    
+>       with Server(
+            datasets={
+                "prefix_dataset": DATASET_DIR,
+                "files_dataset": rrd_files,
+            }
+        ) as server:
+
+rerun_py/tests/unit/test_server.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429c5dd0>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+___________________________ test_server_version_info ___________________________
+
+    def test_server_version_info() -> None:
+        """Test that version_info() returns valid info for a local OSS server."""
+>       with Server() as server:
+             ^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429f9950>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+____________ test_server_failed_table_creation_does_not_leak_entry _____________
+
+tmp_path = PosixPath('/private/var/folders/w1/lcyyyzy55n7398p_mz05cm_80000gn/T/pytest-of-donavan/pytest-11/test_server_failed_table_creat0')
+
+    def test_server_failed_table_creation_does_not_leak_entry(tmp_path: Path) -> None:
+        """Regression test for https://linear.app/rerun/issue/RR-3644/create-table-failure-leads-to-unlisted-existing-table."""
+    
+>       with Server() as server:
+             ^^^^^^^^
+
+rerun_py/tests/unit/test_server.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rerun.server.Server object at 0x1429ca210>
+
+    def __init__(
+        self,
+        *,
+        # Binding all interfaces is the intended default: the viewer is normally opened
+        # from another machine. Narrow it with `host=` when that is not wanted.
+        host: str = "0.0.0.0",  # noqa: S104
+        port: int | None = None,
+        datasets: dict[str, str | PathLike[str] | Sequence[str | PathLike[str]]] | None = None,
+        tables: dict[str, PathLike[str]] | None = None,
+        addr: str = "0.0.0.0",  # noqa: S104
+    ) -> None:
+        """
+        Create a new Rerun server instance and start it.
+    
+        The server will host recordings and serve them via HTTP. If datasets are provided, they will be loaded and made
+        available when the server starts.
+    
+        Parameters
+        ----------
+        host:
+            The IP address to bind the server to.
+            The default, `"0.0.0.0"`, lets other machines on your network connect.
+            Use `"127.0.0.1"` to allow connections from this machine only.
+        port:
+            The port to bind the server to, or `None` (or `0`) to let the OS select a random
+            available port. Use `url()` to get the address of the running server.
+        datasets:
+            Optional dictionary specifying dataset to load in the server at startup. Values in the dictionary may be
+            either of:
+            - a single path: must be a directory, all the RRDs it contains will be registered
+            - a sequence of paths: each path must be a RRD file, which will all be registered
+        tables:
+            Optional dictionary mapping table names to lance file paths which will be loaded and made available when the
+            server starts.
+        addr:
+            Deprecated: Renamed to `host`
+    
+        """
+    
+        if host == "0.0.0.0" and addr != "0.0.0.0":  # noqa: S104
+            host = addr
+            _send_warning_or_raise(
+                "The `addr` parameter is deprecated in Rerun 0.29, and has been renamed to `host`.",
+                depth_to_user_code=1,
+                warning_type=DeprecationWarning,
+            )
+    
+        # Port 0 lets the OS pick a free port for us. `url()` reports the actual port.
+        resolved_port = 0 if port is None else port
+    
+        all_datasets = {}
+        all_dataset_prefixes = {}
+    
+        if datasets is not None:
+            for name, path in datasets.items():
+                if isinstance(path, str | PathLike):
+                    path = Path(path)
+    
+                    if not path.is_dir():
+                        raise ValueError(f"Prefix path '{path}' for dataset '{name}' must be a directory.")
+    
+                    all_dataset_prefixes[name] = str(path.absolute())
+                else:
+                    paths = [Path(p) for p in path]
+                    for p in paths:
+                        if not p.is_file():
+                            raise ValueError(f"Path '{p}' for dataset '{name}' must be a RRD file.")
+    
+                    all_datasets[name] = [str(p.absolute()) for p in paths]
+    
+>       self._internal = _ServerInternal(
+            host=host,
+            port=resolved_port,
+            datasets=all_datasets,
+            dataset_prefixes=all_dataset_prefixes,
+            tables={name: str(path) for name, path in (tables or {}).items()},
+        )
+E       ValueError: Failed to start Rerun server: Server failed to start: Failed to bind to address 0.0.0.0:0: Operation not permitted (os error 1)
+
+rerun_py/rerun_sdk/rerun/server.py:118: ValueError
+____________________________ test_urdf_tree_loading ____________________________
+
+    def test_urdf_tree_loading() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+___________________________ test_urdf_tree_transform ___________________________
+
+    def test_urdf_tree_transform() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+_________________________ test_urdf_tree_frame_prefix __________________________
+
+    def test_urdf_tree_frame_prefix() -> None:
+        prefix = "left_arm/"
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH, frame_prefix=prefix)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+________________________ test_urdf_tree_no_frame_prefix ________________________
+
+    def test_urdf_tree_no_frame_prefix() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+______________________________ test_urdf_tree_log ______________________________
+
+    def test_urdf_tree_log() -> None:
+        rec = rr.RecordingStream("rerun_example_test_urdf_tree_log", make_default=False, make_thread_default=False)
+        rec.memory_recording()
+    
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+----------------------------- Captured stderr call -----------------------------
+2026-11-12T01:06:08.062098Z  WARN re_sdk::log_sink: Dropping data in MemorySink
+______________ test_urdf_tree_custom_static_transform_entity_path ______________
+
+tmp_path = PosixPath('/private/var/folders/w1/lcyyyzy55n7398p_mz05cm_80000gn/T/pytest-of-donavan/pytest-11/test_urdf_tree_custom_static_t0')
+
+    def test_urdf_tree_custom_static_transform_entity_path(tmp_path: Path) -> None:
+        rrd_path = tmp_path / "urdf_static_transforms.rrd"
+    
+        with rr.RecordingStream(
+            "test_urdf_tree_custom_static_transform_entity_path",
+            make_default=False,
+            make_thread_default=False,
+        ) as rec:
+            rec.save(rrd_path)
+    
+>           tree = rru.UrdfTree.from_file_path(URDF_PATH, static_transform_entity_path="custom_tf_static")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+____________________________ test_urdf_tree_stream _____________________________
+
+    def test_urdf_tree_stream() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+__________ test_urdf_tree_stream_custom_static_transform_entity_path ___________
+
+    def test_urdf_tree_stream_custom_static_transform_entity_path() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH, static_transform_entity_path="custom_tf_static")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+________________ test_urdf_tree_stream_without_joint_transforms ________________
+
+    def test_urdf_tree_stream_without_joint_transforms() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+_____________________ test_urdf_compute_transform_columns ______________________
+
+    def test_urdf_compute_transform_columns() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+_________________ test_urdf_transform_batches_in_lens_pipeline _________________
+
+    def test_urdf_transform_batches_in_lens_pipeline() -> None:
+        """Integration test for computing transform batches from joint states in a chunk pipeline using lenses."""
+    
+        frame_prefix = "prefix_"
+>       urdf_tree = rru.UrdfTree.from_file_path(URDF_PATH, frame_prefix=frame_prefix)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:213: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+--------------------------- snapshot report summary ----------------------------
+1 snapshot unused.
+
+Re-run pytest with --snapshot-update to delete unused snapshots.
+=========================== short test summary info ============================
+FAILED rerun_py/tests/unit/test_multi_stream.py::test_isolated_streams - Valu...
+FAILED rerun_py/tests/unit/test_send_dataframe.py::test_send_dataframe_roundtrip
+FAILED rerun_py/tests/unit/test_server.py::test_server_starts_and_stops - Val...
+FAILED rerun_py/tests/unit/test_server.py::test_server_context_manager - Valu...
+FAILED rerun_py/tests/unit/test_server.py::test_server_custom_port - ValueErr...
+FAILED rerun_py/tests/unit/test_server.py::test_server_random_port - ValueErr...
+FAILED rerun_py/tests/unit/test_server.py::test_server_ephemeral_port - Value...
+FAILED rerun_py/tests/unit/test_server.py::test_server_shutdown_twice_raises
+FAILED rerun_py/tests/unit/test_server.py::test_server_client_after_shutdown_raises
+FAILED rerun_py/tests/unit/test_server.py::test_server_with_dataset_prefix - ...
+FAILED rerun_py/tests/unit/test_server.py::test_server_with_dataset_files - V...
+FAILED rerun_py/tests/unit/test_server.py::test_server_with_multiple_datasets
+FAILED rerun_py/tests/unit/test_server.py::test_server_version_info - ValueEr...
+FAILED rerun_py/tests/unit/test_server.py::test_server_failed_table_creation_does_not_leak_entry
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_loading - Runtim...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_transform - Runt...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_frame_prefix - R...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_no_frame_prefix
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_log - RuntimeErr...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_custom_static_transform_entity_path
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_stream - Runtime...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_stream_custom_static_transform_entity_path
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_stream_without_joint_transforms
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_compute_transform_columns
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_transform_batches_in_lens_pipeline
+25 failed, 988 passed, 4 skipped in 4.16s

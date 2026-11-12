@@ -1,0 +1,805 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/donavan/swe/fall2026/csci360/rerun/rerun_py
+configfile: pyproject.toml
+plugins: benchmark-5.2.3, anyio-4.14.2, inline-snapshot-0.31.1, syrupy-5.0.0
+collected 1001 items
+
+rerun_py/tests/unit/test_annotation_context.py ......................... [  2%]
+........................................................................ [  9%]
+..............                                                           [ 11%]
+rerun_py/tests/unit/test_any_values.py .......................           [ 13%]
+rerun_py/tests/unit/test_archetype_builder.py ...                        [ 13%]
+rerun_py/tests/unit/test_archetype_str.py .......                        [ 14%]
+rerun_py/tests/unit/test_arrows3d.py ..                                  [ 14%]
+rerun_py/tests/unit/test_asset3d.py .                                    [ 14%]
+rerun_py/tests/unit/test_asset_audio.py ...                              [ 14%]
+rerun_py/tests/unit/test_background.py .                                 [ 15%]
+rerun_py/tests/unit/test_bar_chart.py .                                  [ 15%]
+rerun_py/tests/unit/test_batcher_config.py .....                         [ 15%]
+rerun_py/tests/unit/test_binary_stream.py .                              [ 15%]
+rerun_py/tests/unit/test_blob.py ..                                      [ 15%]
+rerun_py/tests/unit/test_box2d.py ...............                        [ 17%]
+rerun_py/tests/unit/test_box3d.py ......                                 [ 18%]
+rerun_py/tests/unit/test_chunk_from_property.py ......                   [ 18%]
+rerun_py/tests/unit/test_clear.py ...                                    [ 18%]
+rerun_py/tests/unit/test_color_columns.py .....................          [ 21%]
+rerun_py/tests/unit/test_color_conversion.py ...                         [ 21%]
+rerun_py/tests/unit/test_container_blueprint.py .                        [ 21%]
+rerun_py/tests/unit/test_content_filter.py ...........................   [ 24%]
+rerun_py/tests/unit/test_dataframe_view_query.py ...........             [ 25%]
+rerun_py/tests/unit/test_datafusion_utils.py ......                      [ 25%]
+rerun_py/tests/unit/test_dataloader_decoder_helpers.py ................. [ 27%]
+........................................................................ [ 34%]
+.                                                                        [ 34%]
+rerun_py/tests/unit/test_dataloader_manifest.py ........................ [ 37%]
+.                                                                        [ 37%]
+rerun_py/tests/unit/test_dataloader_query_indices.py ............        [ 38%]
+rerun_py/tests/unit/test_dataloader_shuffle.py ......................... [ 41%]
+.....                                                                    [ 41%]
+rerun_py/tests/unit/test_dataloader_skip_incomplete.py ..........        [ 42%]
+rerun_py/tests/unit/test_dataloader_video_conversion.py ..               [ 42%]
+rerun_py/tests/unit/test_dataloader_video_rgb_bank.py ..                 [ 42%]
+rerun_py/tests/unit/test_dataloader_yuv.py .........                     [ 43%]
+rerun_py/tests/unit/test_deprecated.py ....                              [ 44%]
+rerun_py/tests/unit/test_depth_image.py ......                           [ 44%]
+rerun_py/tests/unit/test_disconnect_on_cleanup.py ...                    [ 45%]
+rerun_py/tests/unit/test_ellipsoids3d.py .                               [ 45%]
+rerun_py/tests/unit/test_exceptions.py ...                               [ 45%]
+rerun_py/tests/unit/test_expected_warnings.py .                          [ 45%]
+rerun_py/tests/unit/test_file_sink.py .....                              [ 46%]
+rerun_py/tests/unit/test_filesink_threading.py .                         [ 46%]
+rerun_py/tests/unit/test_fixed_size_enum_array.py ....                   [ 46%]
+rerun_py/tests/unit/test_gaussian_splats3d.py ....                       [ 47%]
+rerun_py/tests/unit/test_geo_line_strings.py .....                       [ 47%]
+rerun_py/tests/unit/test_geopoints.py ..................                 [ 49%]
+rerun_py/tests/unit/test_grpc_server_sink.py s                           [ 49%]
+rerun_py/tests/unit/test_image.py ...                                    [ 49%]
+rerun_py/tests/unit/test_instance_pose3d.py .                            [ 49%]
+rerun_py/tests/unit/test_line_strips2d.py .....                          [ 50%]
+rerun_py/tests/unit/test_line_strips3d.py .....                          [ 50%]
+rerun_py/tests/unit/test_log.py .                                        [ 50%]
+rerun_py/tests/unit/test_map_view_blueprint.py .                         [ 51%]
+rerun_py/tests/unit/test_matnxn.py ..................................... [ 54%]
+.......                                                                  [ 55%]
+rerun_py/tests/unit/test_mesh3d.py .                                     [ 55%]
+rerun_py/tests/unit/test_multi_stream.py ....                            [ 55%]
+rerun_py/tests/unit/test_multiprocessing_gc.py .                         [ 56%]
+rerun_py/tests/unit/test_optimization_profile.py ...                     [ 56%]
+rerun_py/tests/unit/test_optimization_profile_parity.py ...              [ 56%]
+rerun_py/tests/unit/test_pinhole.py .                                    [ 56%]
+rerun_py/tests/unit/test_plot_legend.py .                                [ 56%]
+rerun_py/tests/unit/test_points2d.py ..................                  [ 58%]
+rerun_py/tests/unit/test_points3d.py ..................                  [ 60%]
+rerun_py/tests/unit/test_pooled_batch_leases.py ..                       [ 60%]
+rerun_py/tests/unit/test_pooled_batches.py .ss............               [ 62%]
+rerun_py/tests/unit/test_pooled_batches_cuda.py s                        [ 62%]
+rerun_py/tests/unit/test_python_objects_to_record_batch.py ....          [ 62%]
+rerun_py/tests/unit/test_quaternion.py ................                  [ 64%]
+rerun_py/tests/unit/test_query_metrics.py ..............                 [ 65%]
+rerun_py/tests/unit/test_readers.py ...                                  [ 65%]
+rerun_py/tests/unit/test_rgba32.py ..                                    [ 66%]
+rerun_py/tests/unit/test_sample_index.py ................                [ 67%]
+rerun_py/tests/unit/test_scalar_axis.py .                                [ 67%]
+rerun_py/tests/unit/test_scalars.py .                                    [ 67%]
+rerun_py/tests/unit/test_segmentation_image.py ..                        [ 68%]
+rerun_py/tests/unit/test_selector.py .............                       [ 69%]
+rerun_py/tests/unit/test_send_dataframe.py ............                  [ 70%]
+rerun_py/tests/unit/test_series_styles.py ..                             [ 70%]
+rerun_py/tests/unit/test_server.py .......FFF.....                       [ 72%]
+rerun_py/tests/unit/test_table_blueprint.py ...............              [ 73%]
+rerun_py/tests/unit/test_tensor.py ..                                    [ 74%]
+rerun_py/tests/unit/test_tensor_slice_selection.py .                     [ 74%]
+rerun_py/tests/unit/test_time.py ....................................... [ 78%]
+.......                                                                  [ 78%]
+rerun_py/tests/unit/test_time_column.py ................                 [ 80%]
+rerun_py/tests/unit/test_time_range_boundary.py ..                       [ 80%]
+rerun_py/tests/unit/test_tracing_session.py .........                    [ 81%]
+rerun_py/tests/unit/test_transform3d.py ..............                   [ 82%]
+rerun_py/tests/unit/test_type_aliases.py ........                        [ 83%]
+rerun_py/tests/unit/test_urdf_tree.py FFFFFFFFFFF                        [ 84%]
+rerun_py/tests/unit/test_utf8.py ..                                      [ 84%]
+rerun_py/tests/unit/test_utf8pair.py ..                                  [ 85%]
+rerun_py/tests/unit/test_utilities_datafusion.py ...                     [ 85%]
+rerun_py/tests/unit/test_uuid.py .                                       [ 85%]
+rerun_py/tests/unit/test_validators.py ...................               [ 87%]
+rerun_py/tests/unit/test_vecnd.py ...................................... [ 91%]
+....................................                                     [ 94%]
+rerun_py/tests/unit/test_version.py .                                    [ 94%]
+rerun_py/tests/unit/test_video_frame_reference.py .                      [ 95%]
+rerun_py/tests/unit/test_video_utils.py ................                 [ 96%]
+rerun_py/tests/unit/test_view_blueprint.py .                             [ 96%]
+rerun_py/tests/unit/test_view_contents.py .                              [ 96%]
+rerun_py/tests/unit/test_view_coordinates.py .                           [ 96%]
+rerun_py/tests/unit/test_viewer_client.py ...........................    [ 99%]
+rerun_py/tests/unit/test_viewport_blueprint.py .                         [ 99%]
+rerun_py/tests/unit/test_visible_time_ranges.py ...                      [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_server_with_dataset_prefix ________________________
+
+    def test_server_with_dataset_prefix() -> None:
+        """Test that the server can be started with a dataset prefix (directory)."""
+        with Server(datasets={"test_dataset": DATASET_DIR}) as server:
+            assert server.is_running()
+    
+            client = server.client()
+            ds = client.get_dataset(name="test_dataset")
+>           assert len(ds.segment_ids()) == 20
+E           AssertionError: assert 0 == 20
+E            +  where 0 = len([])
+E            +    where [] = segment_ids()
+E            +      where segment_ids = Entry(EntryKind.DATASET, 'test_dataset').segment_ids
+
+rerun_py/tests/unit/test_server.py:91: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2026-11-12T01:06:19.658272Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.658548Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.658667Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.658773Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.658913Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659047Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659147Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659249Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659384Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659525Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659720Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659824Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.659925Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.660024Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.660123Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.660219Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.660360Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.660462Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.660561Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.660660Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+________________________ test_server_with_dataset_files ________________________
+
+    def test_server_with_dataset_files() -> None:
+        """Test that the server can be started with explicit dataset files."""
+        rrd_files = list(DATASET_DIR.glob("*.rrd"))[:3]
+        assert len(rrd_files) == 3
+    
+        with Server(datasets={"my_dataset": rrd_files}) as server:
+            assert server.is_running()
+    
+            client = server.client()
+            ds = client.get_dataset(name="my_dataset")
+>           assert len(ds.segment_ids()) == 3
+E           AssertionError: assert 0 == 3
+E            +  where 0 = len([])
+E            +    where [] = segment_ids()
+E            +      where segment_ids = Entry(EntryKind.DATASET, 'my_dataset').segment_ids
+
+rerun_py/tests/unit/test_server.py:104: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2026-11-12T01:06:19.768461Z  WARN re_server::rerun_cloud: Failed loading file /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset/file3.rrd: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.768525Z  WARN re_server::rerun_cloud: Failed loading file /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset/file19.rrd: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.768564Z  WARN re_server::rerun_cloud: Failed loading file /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset/file18.rrd: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+______________________ test_server_with_multiple_datasets ______________________
+
+    def test_server_with_multiple_datasets() -> None:
+        """Test that the server can be started with multiple datasets."""
+        rrd_files = list(DATASET_DIR.glob("*.rrd"))[:2]
+    
+        with Server(
+            datasets={
+                "prefix_dataset": DATASET_DIR,
+                "files_dataset": rrd_files,
+            }
+        ) as server:
+            assert server.is_running()
+    
+            client = server.client()
+    
+            prefix_ds = client.get_dataset(name="prefix_dataset")
+            files_ds = client.get_dataset(name="files_dataset")
+    
+>           assert len(prefix_ds.segment_ids()) == 20
+E           AssertionError: assert 0 == 20
+E            +  where 0 = len([])
+E            +    where [] = segment_ids()
+E            +      where segment_ids = Entry(EntryKind.DATASET, 'prefix_dataset').segment_ids
+
+rerun_py/tests/unit/test_server.py:124: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2026-11-12T01:06:19.861648Z  WARN re_server::rerun_cloud: Failed loading file /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset/file3.rrd: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.861713Z  WARN re_server::rerun_cloud: Failed loading file /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset/file19.rrd: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.861822Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.861857Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.861897Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.861941Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.861982Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862020Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862058Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862100Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862139Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862177Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862218Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862259Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862297Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862334Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862374Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862412Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862450Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862487Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862525Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+2026-11-12T01:06:19.862562Z  WARN re_server::store::in_memory_store: Failed loading file in /Users/donavan/swe/fall2026/csci360/rerun/rerun_py/tests/e2e_redap_tests/resources/dataset: Error loading RRD: Not an RRD file: expected FourCC header "RRF2", got "vers"
+____________________________ test_urdf_tree_loading ____________________________
+
+    def test_urdf_tree_loading() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+___________________________ test_urdf_tree_transform ___________________________
+
+    def test_urdf_tree_transform() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+_________________________ test_urdf_tree_frame_prefix __________________________
+
+    def test_urdf_tree_frame_prefix() -> None:
+        prefix = "left_arm/"
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH, frame_prefix=prefix)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+________________________ test_urdf_tree_no_frame_prefix ________________________
+
+    def test_urdf_tree_no_frame_prefix() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+______________________________ test_urdf_tree_log ______________________________
+
+    def test_urdf_tree_log() -> None:
+        rec = rr.RecordingStream("rerun_example_test_urdf_tree_log", make_default=False, make_thread_default=False)
+        rec.memory_recording()
+    
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+----------------------------- Captured stderr call -----------------------------
+2026-11-12T01:06:20.248926Z  WARN re_sdk::log_sink: Dropping data in MemorySink
+______________ test_urdf_tree_custom_static_transform_entity_path ______________
+
+tmp_path = PosixPath('/private/var/folders/w1/lcyyyzy55n7398p_mz05cm_80000gn/T/pytest-of-donavan/pytest-12/test_urdf_tree_custom_static_t0')
+
+    def test_urdf_tree_custom_static_transform_entity_path(tmp_path: Path) -> None:
+        rrd_path = tmp_path / "urdf_static_transforms.rrd"
+    
+        with rr.RecordingStream(
+            "test_urdf_tree_custom_static_transform_entity_path",
+            make_default=False,
+            make_thread_default=False,
+        ) as rec:
+            rec.save(rrd_path)
+    
+>           tree = rru.UrdfTree.from_file_path(URDF_PATH, static_transform_entity_path="custom_tf_static")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+____________________________ test_urdf_tree_stream _____________________________
+
+    def test_urdf_tree_stream() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+__________ test_urdf_tree_stream_custom_static_transform_entity_path ___________
+
+    def test_urdf_tree_stream_custom_static_transform_entity_path() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH, static_transform_entity_path="custom_tf_static")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+________________ test_urdf_tree_stream_without_joint_transforms ________________
+
+    def test_urdf_tree_stream_without_joint_transforms() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+_____________________ test_urdf_compute_transform_columns ______________________
+
+    def test_urdf_compute_transform_columns() -> None:
+>       tree = rru.UrdfTree.from_file_path(URDF_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+_________________ test_urdf_transform_batches_in_lens_pipeline _________________
+
+    def test_urdf_transform_batches_in_lens_pipeline() -> None:
+        """Integration test for computing transform batches from joint states in a chunk pipeline using lenses."""
+    
+        frame_prefix = "prefix_"
+>       urdf_tree = rru.UrdfTree.from_file_path(URDF_PATH, frame_prefix=frame_prefix)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+rerun_py/tests/unit/test_urdf_tree.py:213: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/donavan/swe/fall2026/csci360/rerun/examples/rust/animated_urdf/data/so100.urdf')
+entity_path_prefix = None
+
+    @staticmethod
+    def from_file_path(
+        path: str | Path,
+        entity_path_prefix: str | None = None,
+        *,
+        frame_prefix: str | None = None,
+        static_transform_entity_path: str | None = None,
+    ) -> UrdfTree:
+        """
+        Load a URDF file from the given path.
+    
+        Parameters
+        ----------
+        path:
+            Path to the URDF file.
+        entity_path_prefix:
+            Optional entity path prefix.
+        frame_prefix:
+            Optional prefix for all frame IDs.
+            Use to load the same URDF multiple times with unique frames.
+        static_transform_entity_path:
+            Optional entity path to use when logging static transforms.
+            If omitted, defaults to `/tf_static`.
+            This path is not affected by `entity_path_prefix`.
+    
+        """
+        return UrdfTree(
+>           _UrdfTreeInternal.from_file_path(
+                path,
+                entity_path_prefix,
+                frame_prefix=frame_prefix,
+                static_transform_entity_path=static_transform_entity_path,
+            )
+        )
+E       RuntimeError: Failed to load URDF file: No elements found
+
+rerun_py/rerun_sdk/rerun/urdf.py:242: RuntimeError
+--------------------------- snapshot report summary ----------------------------
+1 snapshot passed.
+=========================== short test summary info ============================
+FAILED rerun_py/tests/unit/test_server.py::test_server_with_dataset_prefix - ...
+FAILED rerun_py/tests/unit/test_server.py::test_server_with_dataset_files - A...
+FAILED rerun_py/tests/unit/test_server.py::test_server_with_multiple_datasets
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_loading - Runtim...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_transform - Runt...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_frame_prefix - R...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_no_frame_prefix
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_log - RuntimeErr...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_custom_static_transform_entity_path
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_stream - Runtime...
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_stream_custom_static_transform_entity_path
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_tree_stream_without_joint_transforms
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_compute_transform_columns
+FAILED rerun_py/tests/unit/test_urdf_tree.py::test_urdf_transform_batches_in_lens_pipeline
+================== 14 failed, 983 passed, 4 skipped in 6.13s ===================
