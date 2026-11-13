@@ -155,9 +155,45 @@ impl LogSender {
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
+    use std::sync::Arc;
     use std::time::Duration;
 
     use crate::{DataSourceMessage, FlushError, LogSource, SmartMessagePayload, log_channel};
+
+    #[test]
+    fn flush_when_receiver_waits_for_wake_notifies_before_waiting_for_ack() {
+        let (sender, receiver) = log_channel(LogSource::Sdk);
+        let receiver = Arc::new(receiver);
+        let (wake_sender, wake_receiver) = std::sync::mpsc::sync_channel(1);
+        receiver.set_waker(move || {
+            wake_sender.send(()).ok();
+        });
+
+        std::thread::scope(|scope| {
+            let consumer_receiver = Arc::clone(&receiver);
+            let consumer = scope.spawn(move || {
+                // Do not poll the data channel until its registered waker runs.
+                if wake_receiver.recv_timeout(Duration::from_secs(5)).is_err() {
+                    return false;
+                }
+                let marker = consumer_receiver.try_recv().unwrap();
+                let SmartMessagePayload::Flush { on_flush_done } = marker.payload else {
+                    panic!("expected a flush marker after waking");
+                };
+                on_flush_done();
+                true
+            });
+
+            let result = sender.flush_blocking(Duration::from_secs(5));
+            let received_wake = consumer.join().unwrap();
+            assert!(
+                result.is_ok(),
+                "flush must wake its receiver before awaiting acknowledgment; got {result:?}, receiver woke: {received_wake}"
+            );
+            assert!(received_wake);
+        });
+        assert!(receiver.is_empty());
+    }
 
     #[test]
     fn flush_when_acknowledged_delivers_prior_data_before_returning() {

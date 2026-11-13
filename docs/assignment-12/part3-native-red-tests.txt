@@ -1,0 +1,28 @@
+   Compiling re_log_channel v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_log_channel)
+    Finished `test` profile [optimized] target(s) in 1.36s
+────────────
+ Nextest run ID d9f50b2e-1f5b-43c4-a2fa-efc5017a8c31 with nextest profile: default
+    Starting 1 test across 1 binary (16 tests skipped)
+        FAIL [   5.020s] (1/1) re_log_channel sender::tests::flush_when_receiver_waits_for_wake_notifies_before_waiting_for_ack
+  stdout ───
+
+    running 1 test
+    test sender::tests::flush_when_receiver_waits_for_wake_notifies_before_waiting_for_ack ... FAILED
+
+    failures:
+
+    failures:
+        sender::tests::flush_when_receiver_waits_for_wake_notifies_before_waiting_for_ack
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 5.01s
+
+  stderr ───
+
+    thread 'sender::tests::flush_when_receiver_waits_for_wake_notifies_before_waiting_for_ack' (4096557) panicked at crates/store/re_log_channel/src/sender.rs:189:13:
+    flush must wake its receiver before awaiting acknowledgment; got Err(Timeout), receiver woke: false
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   5.021s] 1 test run: 0 passed, 1 failed, 16 skipped
+        FAIL [   5.020s] (1/1) re_log_channel sender::tests::flush_when_receiver_waits_for_wake_notifies_before_waiting_for_ack
+error: test run failed
