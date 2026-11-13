@@ -46,3 +46,19 @@ Clippy with all targets and features, the repository Rust formatter, and diff wh
 Only test modules were added to production source files; no runtime behavior or dependencies changed.
 The audit is a repository-wide static search and focused candidate review, not proof of coverage for every function.
 No new whole-project coverage percentage or passing entire-workspace result is claimed.
+
+## November 12 native Part 3 cycle
+
+The student asked for Part 3 to match the Part 2 native methods and follow the actual Red/Green/Refactor sequence.
+Codex found that `LogSender::flush_blocking` waits for acknowledgment before waking a receiver that may depend on the wake callback.
+A targeted upstream open-issue search found no matching flush/waker report; the assignment's characterization-discovered-defect option was used.
+Issue #9211 was kept separate as earlier research rather than claimed as fixed.
+
+The final Red regression failed with `Err(Timeout), receiver woke: false` and was committed in `e91844fba1`.
+A harness lint warning prompted use of a bounded notification channel; the Red failure was rerun and the local Red commit finalized before Green.
+Green `ea5ae0246b` only moves the existing wake block before the wait.
+Refactor consolidates repeated wake blocks into one private helper.
+Both complete affected-crate runs pass 17 tests with no skips.
+The sender test module is byte-for-byte identical to final Red; Clippy with warnings denied, repository formatting, and diff checks pass.
+No entire-workspace result or new native coverage percentage is claimed.
+The code and documentation are published only in the student's fork; no upstream issue, comment, or PR was created.

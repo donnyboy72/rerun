@@ -101,3 +101,13 @@ The original four A7 commits remain intact; a supplemental A7-Tests commit adds 
 The Python Red/Green/Refactor evidence is unchanged.
 The earlier coverage percentages remain explicitly Python-only; no Rust or whole-project percentage is inferred from the additional test count.
 The full multi-language workspace was not rerun.
+
+## Final Part 3 revision matching the native targets
+
+[Part3-Native-Flush.md](Part3-Native-Flush.md) is the final cycle for `LogSender::flush_blocking`, one of Part 2's three methods.
+The new same-file regression reproduces a receiver-wake ordering defect and is committed failing in `e91844fba1`.
+`ea5ae0246b` applies the smallest fix by waking before waiting for acknowledgment.
+The final Refactor extracts repeated wake code with the tests unchanged.
+Both full affected-crate runs pass **17 tests, 0 skipped**.
+The four current submission commits are the native Part 2 A7-Tests commit `d6501c09c5`, the native Red and Green above, and the final native A7-Refactor commit linked in the wiki.
+Earlier Python commits and issue #9211 research are historical additional work, not evidence for this native cycle.

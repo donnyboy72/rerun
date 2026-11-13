@@ -1,0 +1,6 @@
+{
+  "red_commit": "e91844fba1",
+  "test_module_unchanged": true,
+  "test_module_sha256": "adb9738b55916a4534e16af79d6950926b83715eaadd2509c41318043a3140d0",
+  "scope": "All sender test-module text, including Part 2 characterization and Part 3 regression"
+}

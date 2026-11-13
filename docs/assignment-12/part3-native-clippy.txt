@@ -1,0 +1,2 @@
+    Checking re_log_channel v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_log_channel)
+    Finished `dev` profile [optimized] target(s) in 0.92s

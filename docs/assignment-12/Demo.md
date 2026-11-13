@@ -1,24 +1,18 @@
-# Two minute demo
+# Two minute native testing demo
 
-Use GitHub's commit views and the wiki once the reviewed branch and page are published.
-Use the commit links in the published wiki; the original four commits are preserved and a supplemental A7-Tests commit adds the revised Rust characterization.
+Use the four current submission links in the wiki: native A7-Tests, A7-Red, A7-Green, and A7-Refactor.
+The earlier Python cycle and issue #9211 research are not this demonstration.
 
-1. **0:00–0:35:** Open the A7-Red commit and `docs/assignment-12/red-tests.txt`.
-   Show the failing `NameError` and explain why a fresh interpreter matters: calling the parser after import already has a fallback value.
-2. **0:35–1:00:** Open A7-Green.
-   Show the single `_strict_mode = False` initialization and `green-unit-tests.txt`: 1,031 passed, 4 skipped.
-   Explain that invalid input now emits its existing diagnostic and defaults to false during startup.
-3. **1:00–1:25:** Show `recv_timeout_when_empty_with_live_sender_keeps_connection` in `crates/store/re_log_channel/src/receiver.rs`.
-   Explain that a zero-timeout poll must preserve a live connection, whereas sender disconnection updates the receiver state.
-   These Rust tests use real channels and the maintainer's preferred same-file test module.
-4. **1:25–1:45:** Show A7-Refactor and explain the early returns.
-   The tests have not changed since Red.
-5. **1:45–2:00:** Show the wiki's Testing Evolution and AI sections.
-   Explain the assistant's mistaken assumption that no directly named test meant no existing coverage, and the distinction between line execution and assertions.
-
-For a local replay of Red without changing this checkout, inspect the committed log with:
-
-```sh
-git show cb7c42c742:docs/assignment-12/red-tests.txt
-git show 94d2888f6e -- rerun_py/rerun_sdk/rerun/error_utils.py
-```
+1. **0:00–0:35:** Show native Red `e91844fba1` and `part3-native-red-tests.txt`.
+   Explain the real failure: `Err(Timeout), receiver woke: false`.
+   The consumer waits for the registered notification, so the flush marker cannot be acknowledged before that notification runs.
+2. **0:35–1:00:** Show Green `ea5ae0246b`.
+   The only production change moves the existing wake call before the acknowledgment wait.
+   Show `part3-native-green-tests.txt`: the complete affected crate has 17 passed, 0 skipped.
+3. **1:00–1:25:** Show Part 2's `recv_timeout_when_empty_with_live_sender_keeps_connection` in its same-file Rust test module.
+   Explain that silence and disconnection are different results and state transitions.
+4. **1:25–1:45:** Show the final native Refactor.
+   `wake_receiver` removes repetition from four sender paths; the test module is unchanged from Red.
+   Show `part3-native-refactor-tests.txt` and `part3-native-unchanged-tests.json`.
+5. **1:45–2:00:** Explain the assistant's initial Python-only selection and the unbounded test-notification channel corrected before final Red.
+   State that 17 passing tests covers the whole affected native crate, not the entire multi-language workspace.

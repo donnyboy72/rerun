@@ -27,6 +27,12 @@ impl LogSender {
         }
     }
 
+    fn wake_receiver(&self) {
+        if let Some(waker) = self.channel.waker.read().as_ref() {
+            (waker)();
+        }
+    }
+
     /// Send a message to the receiver
     pub fn send(&self, msg: DataSourceMessage) -> Result<(), SendError<Box<DataSourceMessage>>> {
         let source = Arc::clone(&self.source);
@@ -39,9 +45,7 @@ impl LogSender {
                 SmartMessagePayload::Msg(msg) => SendError(Box::new(msg)),
                 SmartMessagePayload::Flush { .. } | SmartMessagePayload::Quit(_) => unreachable!(),
             })?;
-        if let Some(waker) = self.channel.waker.read().as_ref() {
-            (waker)();
-        }
+        self.wake_receiver();
 
         Ok(())
     }
@@ -71,9 +75,7 @@ impl LogSender {
             }
         })?;
 
-        if let Some(waker) = self.channel.waker.read().as_ref() {
-            (waker)();
-        }
+        self.wake_receiver();
 
         Ok(())
     }
@@ -98,9 +100,8 @@ impl LogSender {
             })
             .map_err(|_ignored| FlushError::Closed)?;
 
-        if let Some(waker) = self.channel.waker.read().as_ref() {
-            (waker)();
-        }
+        // A receiver waiting for this notification cannot acknowledge until it wakes.
+        self.wake_receiver();
 
         rx.recv_timeout(timeout).map_err(|err| match err {
             std::sync::mpsc::RecvTimeoutError::Timeout => FlushError::Timeout,
@@ -133,9 +134,7 @@ impl LogSender {
             })
             .map_err(|SendError(msg)| SendError(Box::new(msg)))?;
 
-        if let Some(waker) = self.channel.waker.read().as_ref() {
-            (waker)();
-        }
+        self.wake_receiver();
 
         Ok(())
     }
