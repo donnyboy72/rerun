@@ -1,0 +1,24 @@
+   Compiling re_log_channel v0.40.0-alpha.1+dev (/Users/donavan/swe/fall2026/csci360/rerun/crates/store/re_log_channel)
+    Finished `test` profile [optimized] target(s) in 1.35s
+────────────
+ Nextest run ID 04496ae6-b83c-4fa3-bfa5-53523159e328 with nextest profile: default
+    Starting 17 tests across 1 binary
+        PASS [   0.015s] ( 1/17) re_log_channel receiver_set::tests::remove_by_uri_when_local_or_js_source_looks_like_uri_preserves_it
+        PASS [   0.015s] ( 2/17) re_log_channel sender::tests::flush_when_acknowledged_delivers_prior_data_before_returning
+        PASS [   0.016s] ( 3/17) re_log_channel receiver_set::tests::remove_by_uri_when_empty_or_unknown_does_not_remove_existing_source
+        PASS [   0.016s] ( 4/17) re_log_channel receiver_set::tests::remove_by_uri_when_multiple_receivers_match_disconnects_all_matches
+        PASS [   0.016s] ( 5/17) re_log_channel receiver::tests::recv_timeout_when_data_is_queued_preserves_source_and_payload
+        PASS [   0.017s] ( 6/17) re_log_channel receiver::tests::recv_timeout_when_sender_drops_drains_queued_data_before_disconnect
+        PASS [   0.017s] ( 7/17) re_log_channel receiver::tests::recv_timeout_when_sender_is_gone_marks_disconnected
+        PASS [   0.017s] ( 8/17) re_log_channel receiver_set::tests::remove_by_uri_when_network_source_matches_disconnects_it_and_preserves_others
+        PASS [   0.017s] ( 9/17) re_log_channel receiver::tests::recv_timeout_when_empty_with_live_sender_keeps_connection
+        PASS [   0.009s] (10/17) re_log_channel tests::url_display_name_keeps_long_real_urls
+        PASS [   0.009s] (11/17) re_log_channel sender::tests::flush_when_receiver_is_gone_returns_closed
+        PASS [   0.010s] (12/17) re_log_channel sender::tests::flush_when_callback_is_dropped_without_ack_returns_closed
+        PASS [   0.010s] (13/17) re_log_channel sender::tests::flush_when_receiver_waits_for_wake_notifies_before_waiting_for_ack
+        PASS [   0.009s] (14/17) re_log_channel tests::url_display_name_keeps_short_urls
+        PASS [   0.010s] (15/17) re_log_channel sender::tests::flush_when_zero_timeout_and_no_ack_returns_timeout_but_queues_marker
+        PASS [   0.010s] (16/17) re_log_channel tests::url_display_name_truncates_long_data_url
+        PASS [   0.433s] (17/17) re_log_channel receiver_set::test_receive_set
+────────────
+     Summary [   0.434s] 17 tests run: 17 passed, 0 skipped

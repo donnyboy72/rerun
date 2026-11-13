@@ -98,14 +98,14 @@ impl LogSender {
             })
             .map_err(|_ignored| FlushError::Closed)?;
 
+        if let Some(waker) = self.channel.waker.read().as_ref() {
+            (waker)();
+        }
+
         rx.recv_timeout(timeout).map_err(|err| match err {
             std::sync::mpsc::RecvTimeoutError::Timeout => FlushError::Timeout,
             std::sync::mpsc::RecvTimeoutError::Disconnected => FlushError::Closed,
         })?;
-
-        if let Some(waker) = self.channel.waker.read().as_ref() {
-            (waker)();
-        }
 
         Ok(())
     }
