@@ -43,8 +43,11 @@ Selection rounds outward to whole pixels and clips to the image boundary, includ
 Click **Region** again to resume normal dragging to pan.
 Scroll and zoom keep the selection aligned with the same image pixels.
 Use **Clear region** in the crop window to remove it, or press Escape over the image while Region mode is enabled.
+Clear the region to resume ordinary entity picking and pixel hover inspection.
 Selections are temporary and separate for each view.
 The crop follows the current image at the selected entity; hiding the image or changing its resolution clears the selection.
 
 Inspection supports color, grayscale, depth, and segmentation images in a 2D plane, including in-plane transforms, using the image's current color mapping.
-It does not support videos, image planes outside z = 0, region statistics, or crop export.
+PNG/JPEG images reuse the existing decoded texture, just like raw images.
+For changing images or video frames, the crop follows the currently displayed frame; it does not freeze a frame.
+Image planes outside z = 0, region statistics, and crop export are not supported.

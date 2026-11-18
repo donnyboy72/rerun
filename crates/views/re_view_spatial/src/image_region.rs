@@ -62,7 +62,7 @@ impl ImagePlane {
     }
 
     fn from_image(image: &PickableTexturedRect) -> Option<Self> {
-        if !matches!(image.source_data, PickableRectSourceData::Image { .. }) {
+        if matches!(image.source_data, PickableRectSourceData::Placeholder) {
             return None;
         }
         let rect = &image.textured_rect;
@@ -116,6 +116,14 @@ pub(crate) struct ImageRegionInspector {
 }
 
 impl ImageRegionInspector {
+    pub fn blocks_picking(&self) -> bool {
+        self.enabled
+            || self
+                .selection
+                .as_ref()
+                .is_some_and(|selection| selection.region.is_some())
+    }
+
     pub fn title_bar_ui(&mut self, ui: &mut egui::Ui) {
         if ui.selectable_label(self.enabled, "Region").on_hover_text(
             "Inspect image region: enable, then drag a rectangle on an image. Disable to pan; the selection stays attached to the image.",

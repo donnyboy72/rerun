@@ -16,7 +16,7 @@ An analyst can inspect a rectangular portion of an image in a Viewer 2D view wit
 - Test region geometry at unit level and selection through the real spatial-view UI with logged image data at system level.
 
 This version supports image rectangles in the 2D plane, including decoded color, grayscale, depth, and segmentation images using their existing color mapping.
-It excludes video, tilted 3D image planes, region statistics, crop export, editing, saved blueprint selections, and SDK or recording-format changes.
+It excludes frame freezing, tilted 3D image planes, region statistics, crop export, editing, saved blueprint selections, and SDK or recording-format changes.
 The public extension is a Viewer interface control and drag interaction.
 The work touches existing view state, interaction routing, rendering integration, view help, and documentation; review must consider coordinate transforms, gesture ownership, selection lifetime, and integration tests together.
 
@@ -129,3 +129,16 @@ The title-bar `ViewClass::extra_title_bar_ui` hook provides the mode toggle with
 
 Adding a private transient field to the publicly exported `SpatialViewState` means external code constructing that type with a struct literal must use its default constructor instead.
 Recording and blueprint compatibility is unaffected, but this Rust source-compatibility limitation requires reviewer attention.
+
+Native Viewer validation exposed interference from ordinary pixel hover inspection while a persistent crop was retained.
+The mode toggle now restores pan while the retained region continues to own inspection; clearing the region restores ordinary picking and pixel hover.
+The system test includes a second rendered snapshot after pan and zoom, rather than checking only retained coordinate labels.
+
+A later format audit found that `EncodedImage` and `EncodedDepthImage` use the same internal `Video` texture-source variant as playback.
+Rejecting that variant would incorrectly reject ordinary PNG/JPEG images.
+The inspector therefore accepts every non-placeholder displayed texture; any changing texture follows the current frame, with no added playback or frame-freezing controls.
+The system test now exercises both raw RGB data and an asynchronously decoded PNG through the same interaction sequence.
+
+The full-suite review found the new title-bar label appearing in empty views.
+The control is now available when a view has displayed images, with one repaint when image availability changes; an enabled mode remains accessible so it can always be disabled after data disappears.
+This keeps the tool scoped to image views and preserves the existing empty-view title bar.

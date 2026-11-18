@@ -46,6 +46,12 @@ pub struct ImageCounts {
     pub depth: usize,
 }
 
+impl ImageCounts {
+    pub(crate) fn has_images(self) -> bool {
+        self.color > 0 || self.depth > 0 || self.segmentation > 0
+    }
+}
+
 /// TODO(andreas): Should turn this "inside out" - [`SpatialViewState`] should be used by `View3DState`, not the other way round.
 #[derive(Default, re_byte_size::SizeBytes)]
 pub struct SpatialViewState {

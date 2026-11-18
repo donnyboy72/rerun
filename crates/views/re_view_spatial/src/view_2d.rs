@@ -238,10 +238,10 @@ impl ViewClass for SpatialView2D {
         _space_origin: &EntityPath,
         _view_id: re_viewer_context::ViewId,
     ) -> Result<(), ViewSystemExecutionError> {
-        state
-            .downcast_mut::<SpatialViewState>()?
-            .image_region
-            .title_bar_ui(ui);
+        let state = state.downcast_mut::<SpatialViewState>()?;
+        if state.image_counts_last_frame.has_images() || state.image_region.enabled {
+            state.image_region.title_bar_ui(ui);
+        }
         Ok(())
     }
 
@@ -286,7 +286,11 @@ impl ViewClass for SpatialView2D {
         re_tracing::profile_function!();
 
         let state = state.downcast_mut::<SpatialViewState>()?;
+        let had_images = state.image_counts_last_frame.has_images();
         state.update_frame_statistics(ui, &system_output, SpaceKind::TwoD);
+        if had_images != state.image_counts_last_frame.has_images() {
+            ui.ctx().request_repaint();
+        }
 
         self.view_2d(ctx, missing_chunk_reporter, ui, state, query, system_output)
     }

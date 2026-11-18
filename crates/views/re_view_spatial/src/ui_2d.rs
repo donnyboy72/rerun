@@ -314,7 +314,7 @@ impl SpatialView2D {
             .image_region
             .interact(ctx, &response, ui_from_scene, &system_output, query);
 
-        let picking_config = if !state.image_region.enabled
+        let picking_config = if !state.image_region.blocks_picking()
             && let Some(pointer_pos_ui) = response.hover_pos()
         {
             let picking_context = crate::picking::PickingContext::new(

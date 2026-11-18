@@ -1,5 +1,7 @@
 use std::cell::Cell;
 
+use image::ImageEncoder as _;
+
 use re_log_types::TimePoint;
 use re_sdk_types::{RowId, archetypes};
 use re_test_context::TestContext;
@@ -11,19 +13,47 @@ use re_viewport_blueprint::ViewBlueprint;
 
 #[test]
 fn image_region_drag_preview_pan_and_clear() {
+    exercise_image_region(false);
+}
+
+#[test]
+fn encoded_image_region_drag_preview_pan_and_clear() {
+    exercise_image_region(true);
+}
+
+#[expect(clippy::unwrap_used)] // Test fixture failures should stop the interaction sequence.
+fn exercise_image_region(encoded: bool) {
     let mut test_context = TestContext::new_with_view_class::<SpatialView2D>();
     test_context.log_entity("image", |builder| {
-        builder.with_archetype(
-            RowId::new(),
-            TimePoint::STATIC,
-            &archetypes::Image::from_color_model_and_tensor(
-                re_sdk_types::encodings::ColorModel::RGB,
-                ndarray::Array3::<u8>::from_shape_fn((80, 100, 3), |(y, x, c)| {
-                    [x as u8 * 2, y as u8 * 3, 128][c]
-                }),
+        let image = ndarray::Array3::<u8>::from_shape_fn((80, 100, 3), |(y, x, c)| {
+            [x as u8 * 2, y as u8 * 3, 128][c]
+        });
+        if encoded {
+            let mut bytes = Vec::new();
+            image::codecs::png::PngEncoder::new(&mut bytes)
+                .write_image(
+                    image.as_slice().unwrap(),
+                    100,
+                    80,
+                    image::ExtendedColorType::Rgb8,
+                )
+                .unwrap();
+            builder.with_archetype(
+                RowId::new(),
+                TimePoint::STATIC,
+                &archetypes::EncodedImage::from_file_contents(bytes),
             )
-            .unwrap(),
-        )
+        } else {
+            builder.with_archetype(
+                RowId::new(),
+                TimePoint::STATIC,
+                &archetypes::Image::from_color_model_and_tensor(
+                    re_sdk_types::encodings::ColorModel::RGB,
+                    image,
+                )
+                .unwrap(),
+            )
+        }
     });
     let view_id = test_context.setup_viewport_blueprint(|_, blueprint| {
         blueprint.add_view_at_root(ViewBlueprint::new_with_root_wildcard(
@@ -33,6 +63,9 @@ fn image_region_drag_preview_pan_and_clear() {
     let canvas = Cell::new(egui::Rect::NOTHING);
     let mut harness = test_context
         .setup_kittest_for_rendering_3d(egui::vec2(800.0, 650.0))
+        // Use the encoded-depth fixture's decoding budget for the shared async decoder.
+        .with_step_dt(0.25)
+        .with_max_steps(240)
         .build_ui(|ui| {
             test_context.run_ui(ui, |ctx, ui| {
                 ui.horizontal(|ui| {
@@ -47,7 +80,7 @@ fn image_region_drag_preview_pan_and_clear() {
             });
             test_context.handle_system_commands(ui.ctx());
         });
-    harness.run();
+    harness.try_run_realtime().unwrap();
     harness.get_by_label("Region").click();
     harness.run();
 
@@ -67,7 +100,11 @@ fn image_region_drag_preview_pan_and_clear() {
     harness.get_by_label("40 × 30 pixels");
     harness.get_by_label("x [20, 60), y [20, 50)");
 
-    harness.snapshot("image_region_inspector");
+    harness.snapshot(if encoded {
+        "encoded_image_region_inspector"
+    } else {
+        "image_region_inspector"
+    });
 
     // Navigation resumes through the same UI toggle without discarding the region.
     harness.get_by_label("Region").click();
@@ -85,6 +122,11 @@ fn image_region_drag_preview_pan_and_clear() {
     harness.event(egui::Event::Zoom(1.5));
     harness.run();
     harness.get_by_label("x [20, 60), y [20, 50)");
+    harness.snapshot(if encoded {
+        "encoded_image_region_pan_zoom"
+    } else {
+        "image_region_pan_zoom"
+    });
     harness.get_by_label("Clear region").click();
     harness.run();
     assert!(
