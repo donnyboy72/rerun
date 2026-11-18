@@ -230,6 +230,21 @@ impl ViewClass for SpatialView2D {
         .unwrap_or_else(ViewSpawnHeuristics::empty)
     }
 
+    fn extra_title_bar_ui(
+        &self,
+        _ctx: &ViewerContext<'_>,
+        ui: &mut egui::Ui,
+        state: &mut dyn ViewState,
+        _space_origin: &EntityPath,
+        _view_id: re_viewer_context::ViewId,
+    ) -> Result<(), ViewSystemExecutionError> {
+        state
+            .downcast_mut::<SpatialViewState>()?
+            .image_region
+            .title_bar_ui(ui);
+        Ok(())
+    }
+
     fn selection_ui<'a>(
         &'a self,
         _view_ctx: &re_viewer_context::ViewContext<'_>,

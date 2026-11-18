@@ -31,3 +31,20 @@ The view class, which is specified upon creation, determines which entities it c
 Views can be created both from viewer and from code (see [Configure the Viewer](../../getting-started/configure-the-viewer.md)).
 
 To learn more about the _internals_ of how view classes work, check the [guide on implementing custom views](../../howto/visualization/extend-ui.md).
+
+## Image region inspection
+
+Click **Region** in a 2D view's title bar, then drag a rectangle on an image.
+The **Image region** window shows the crop, its width × height in image pixels, and the selected coordinate ranges.
+The crop displays each pixel at five UI points; scroll within the crop to inspect a region larger than its preview window.
+Coordinates start at the image's top-left corner; range ends are exclusive.
+Selection rounds outward to whole pixels and clips to the image boundary, including when you drag backwards or finish outside the image.
+
+Click **Region** again to resume normal dragging to pan.
+Scroll and zoom keep the selection aligned with the same image pixels.
+Use **Clear region** in the crop window to remove it, or press Escape over the image while Region mode is enabled.
+Selections are temporary and separate for each view.
+The crop follows the current image at the selected entity; hiding the image or changing its resolution clears the selection.
+
+Inspection supports color, grayscale, depth, and segmentation images in a 2D plane, including in-plane transforms, using the image's current color mapping.
+It does not support videos, image planes outside z = 0, region statistics, or crop export.

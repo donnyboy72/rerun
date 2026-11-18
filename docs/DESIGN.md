@@ -118,3 +118,14 @@ The crop exposes pixels already visible to the analyst in the same process; it d
 Existing recordings, SDK callers, and blueprint schemas are unchanged.
 The mode defaults off and selection is transient per view, so existing navigation remains the default.
 A changed image at the same entity and resolution updates the crop to the current frame; disappearance or resolution change clears stale state.
+
+## Implementation revisions
+
+The first preview fitted every selection into a fixed-size window.
+Diff review showed that large selections could therefore be reduced instead of magnified.
+The preview now uses five UI points per texel (matching the existing pixel inspector), with scrolling inside a bounded preview.
+Review also restricted the affine mapping to z = 0 planes and rejected nonfinite determinants; a parallel image translated in z is affected by the Viewer's perspective projection and cannot use this direct scene-to-image mapping.
+The title-bar `ViewClass::extra_title_bar_ui` hook provides the mode toggle without changing the image canvas layout.
+
+Adding a private transient field to the publicly exported `SpatialViewState` means external code constructing that type with a struct literal must use its default constructor instead.
+Recording and blueprint compatibility is unaffected, but this Rust source-compatibility limitation requires reviewer attention.

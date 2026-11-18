@@ -70,7 +70,11 @@ fn ui_from_scene(
 
     // --------------------------------------------------------------------------
 
-    let mut pan_delta_in_ui = response.drag_delta();
+    let mut pan_delta_in_ui = if view_state.image_region.enabled {
+        Vec2::ZERO
+    } else {
+        response.drag_delta()
+    };
     if response.hovered() {
         pan_delta_in_ui += response.ctx.input(|i| i.smooth_scroll_delta);
     }
@@ -189,6 +193,7 @@ pub fn help(os: egui::os::OperatingSystem) -> Help {
             re_ui::IconText::from_modifiers_and(os, zoom_modifier, icons::SCROLL),
         )
         .control("Reset view", ("double", icons::LEFT_MOUSE_CLICK))
+        .control("Inspect image region", ("Region", "+", "drag"))
 }
 
 /// Create the outer 2D view, which consists of a scrollable region
@@ -305,7 +310,13 @@ impl SpatialView2D {
             SpaceKind::TwoD,
         );
 
-        let picking_config = if let Some(pointer_pos_ui) = response.hover_pos() {
+        state
+            .image_region
+            .interact(ctx, &response, ui_from_scene, &system_output, query);
+
+        let picking_config = if !state.image_region.enabled
+            && let Some(pointer_pos_ui) = response.hover_pos()
+        {
             let picking_context = crate::picking::PickingContext::new(
                 pointer_pos_ui,
                 scene_from_ui,
@@ -418,6 +429,9 @@ impl SpatialView2D {
 
         // Add egui-rendered labels on top of everything else:
         painter.extend(label_shapes);
+        state
+            .image_region
+            .paint(ctx, ui, query.view_id, ui_from_scene, &system_output);
 
         Ok(Default::default())
     }

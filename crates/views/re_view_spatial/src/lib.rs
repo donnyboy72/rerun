@@ -6,6 +6,7 @@ mod caches;
 mod contexts;
 mod eye;
 mod heuristics;
+mod image_region;
 mod max_image_dimension_subscriber;
 mod mesh_loader;
 mod pickable_textured_rect;

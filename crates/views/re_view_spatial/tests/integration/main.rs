@@ -10,6 +10,7 @@ mod draw_order;
 mod encoded_depth_image;
 mod gaussian_splats3d;
 mod grid_map;
+mod image_region;
 mod keypoint_rendering;
 mod latest_at_partial_updates;
 mod magnification_filter;

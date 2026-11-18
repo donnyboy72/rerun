@@ -66,6 +66,8 @@ pub struct SpatialViewState {
 
     pub state_3d: View3DState,
 
+    pub(crate) image_region: crate::image_region::ImageRegionInspector,
+
     /// Pinhole component logged at the origin if any.
     pub pinhole_at_origin: Option<Pinhole>,
 
@@ -82,6 +84,7 @@ impl Clone for SpatialViewState {
             image_counts_last_frame: self.image_counts_last_frame,
             previous_picking_result: self.previous_picking_result.clone(),
             state_3d: self.state_3d.clone(),
+            image_region: self.image_region.clone(),
             pinhole_at_origin: self.pinhole_at_origin,
             visual_bounds_2d: self.visual_bounds_2d,
         }
